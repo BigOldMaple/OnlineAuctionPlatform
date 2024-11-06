@@ -57,8 +57,6 @@ function AuctionListPage() {
         renderCard={(item) => <AuctionCard item={item} />}
       />
 
-      <CategoryLinks />
-
       {/* Recently Listed Items */}
       <HorizontalScrollSection
         title="Recently Listed Items"

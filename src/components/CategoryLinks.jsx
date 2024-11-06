@@ -1,20 +1,29 @@
+// src/components/CategoryLinks.jsx
+
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function CategoryLinks() {
-  const categories = ["Men's Clothing", "Women's Clothing", "Jewelery", "Electronics"];
+  const navigate = useNavigate();
+
+  const categories = ["Electronics", "Jewelery", "Men's Clothing", "Women's Clothing"];
+
+  const handleCategoryClick = (category) => {
+    navigate(`/results?category=${category.toLowerCase()}`);
+  };
 
   return (
-    <section className="bg-gray-100 py-12">
-      <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Browse Categories</h2>
-      <div className="flex justify-center space-x-8 text-blue-600">
-        {categories.map((category) => (
-          <Link to={`/categories/${category.toLowerCase()}`} key={category} className="hover:text-blue-800 font-semibold">
-            {category}
-          </Link>
-        ))}
-      </div>
-    </section>
+    <div className="flex flex-wrap gap-4 justify-center mt-6">
+      {categories.map((category) => (
+        <button
+          key={category}
+          onClick={() => handleCategoryClick(category)}
+          className="px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition duration-200 ease-in-out shadow-md transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        >
+          {category}
+        </button>
+      ))}
+    </div>
   );
 }
 

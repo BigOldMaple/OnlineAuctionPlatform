@@ -18,11 +18,14 @@
  * - Includes background, border, and text styling for a dark theme, with colors indicating
  *   different text elements (green for price, blue for category, yellow for rating).
  */
+// src/components/AuctionCard.jsx
+
 import React from "react";
+import { Link } from "react-router-dom";
 
 function AuctionCard({ item }) {
   return (
-    <div className="w-72 h-96 p-4 border border-gray-700 rounded-lg shadow-md bg-gray-900 flex flex-col">
+    <Link to={`/auction/${item.id}`} className="w-72 h-96 p-4 border border-gray-700 rounded-lg shadow-md bg-gray-900 flex flex-col transform transition-transform duration-100 hover:scale-105 hover:shadow-lg hover:bg-gray-800">
       <div className="h-48 flex justify-center items-center mb-4 overflow-hidden">
         <img src={item.image} alt={item.title} className="object-cover h-full" />
       </div>
@@ -31,12 +34,15 @@ function AuctionCard({ item }) {
         {item.description}
       </p>
       <div className="mt-auto">
-        <p className="text-green-400 mt-2">Price: ${item.price}</p>
+        <p className="text-green-400 mt-2">Price: £{item.price}</p>
         <p className="text-blue-300">Category: {item.category}</p>
         <p className="text-yellow-400">Rating: {item.rating.rate} ({item.rating.count} reviews)</p>
       </div>
-    </div>
+    </Link>
   );
 }
 
 export default AuctionCard;
+
+
+
