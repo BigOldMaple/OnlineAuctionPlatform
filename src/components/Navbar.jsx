@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { FaShoppingBasket } from "react-icons/fa";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import SearchBar from "./SearchBar";
+import { useAuth0 } from "@auth0/auth0-react";
 
 function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -17,12 +18,30 @@ function Navbar() {
     setDropdownOpen(false);
   };
 
-  const categories = ["Electronics", "Women's Clothing", "Men's Clothing", "Jewelry", "Home", "Books", "Toys", "Sports"];
+  //AuthO
+  const { isAuthenticated, loginWithRedirect, logout, user, isLoading } =
+    useAuth0();
+
+  console.log({
+    isAuthenticated,
+    user,
+    isLoading,
+  });
+
+  const categories = [
+    "Electronics",
+    "Women's Clothing",
+    "Men's Clothing",
+    "Jewelry",
+    "Home",
+    "Books",
+    "Toys",
+    "Sports",
+  ];
 
   return (
     <nav className="#242424 p-6 ">
       <div className="flex justify-between items-center w-full px-4">
-        
         {/* Left: Site name, Categories, and Search Bar */}
         <div className="flex items-center space-x-4">
           <Link to="/" className="text-white text-2xl font-bold">
@@ -33,7 +52,7 @@ function Navbar() {
           <div className="relative">
             <button
               onClick={toggleDropdown}
-              className="text-white hover:text-gray-400 focus:outline-none flex items-center"
+              className="btn btn-ghost text-gray-200 hover:bg-gray-700"
             >
               Categories
               {dropdownOpen ? (
@@ -69,16 +88,52 @@ function Navbar() {
         </div>
 
         {/* Right: Other Links */}
-        <div className="flex items-center space-x-4">
-          <Link to="/auctions" className="text-white hover:text-gray-400">
+        <div className="navbar-end flex items-center space-x-4">
+          <Link
+            to="/auctions"
+            className="btn btn-ghost text-gray-200 hover:bg-gray-700"
+          >
             Auction List
           </Link>
-          <Link to="/login" className="text-white hover:text-gray-400">
-            Login
-          </Link>
-          <Link to="/bids" className="text-white hover:text-gray-400">
+          <Link
+            to="/bids"
+            className="btn btn-ghost text-gray-200 hover:bg-gray-700"
+          >
             <FaShoppingBasket size={24} />
           </Link>
+          {location.pathname === "/login" ||
+          location.pathname === "/register" ? (
+            <SocialLinks />
+          ) : (
+            <div className="flex items-center space-x-4">
+              {isAuthenticated ? (
+                <>
+                  {/* Display user information */}
+                  <img
+                    src={user.picture}
+                    alt="User Profile"
+                    className="w-8 h-8 rounded-full"
+                  />
+                  <span className="text-gray-700 font-medium">
+                    {user.nickname}
+                  </span>
+                  <button
+                    onClick={() => logout({ returnTo: window.location.origin })}
+                    className="btn btn-ghost text-gray-200 hover:bg-gray-700"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={loginWithRedirect}
+                  className="btn btn-ghost text-gray-200 hover:bg-gray-700"
+                >
+                  Login
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </nav>
