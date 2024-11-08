@@ -1,29 +1,31 @@
 import express from "express";
-import knex from "../knex.js";
+import {
+  getBidsByAuctionID,
+  getAllBidsController,
+  getBidByBidID,
+  getBidsByUserID,
+  createBid,
+  removeBid,
+} from "../controllers/bidController.js"; // Import controller functions
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
-  const { auction_id, user_id, bid_amount } = req.body;
+// Route to get all bids for a specific auction
+router.get("/auction/:auction_id", getBidsByAuctionID);
 
-  // Validate bid amount
-  if (!auction_id || !user_id || !bid_amount) {
-    return res.status(400).json({ error: "All fields are required" });
-  }
+// Route to get all bids (no filters)
+router.get("/", getAllBidsController);
 
-  try {
-    const [bid] = await knex("bids")
-      .insert({
-        auction_id,
-        user_id,
-        bid_amount,
-      })
-      .returning("*");
+// Route to get a bid by ID
+router.get("/:id", getBidByBidID);
 
-    res.status(201).json(bid);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to place bid" });
-  }
-});
+// Route to get all bids by a specific user
+router.get("/user/:user_id", getBidsByUserID);
+
+// Route to place a new bid
+router.post("/", createBid);
+
+// Route to delete a bid by ID
+router.delete("/:id", removeBid);
 
 export default router;

@@ -1,29 +1,33 @@
-// app.js or server.js
 import express from "express";
 import cors from "cors";
-import pkg from "body-parser";
-const { json } = pkg;
+import dotenv from "dotenv";
+import UsersRouter from "./routes/userRoutes.js";
+import ItemsRouter from "./routes/itemsRoutes.js";
+import AuctionsRouter from "./routes/auctionRoutes.js";
+import BidsRouter from "./routes/bidRoutes.js";
 
-import db from "./knex.js"; // Adjust path if necessary
+dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5005;
 
-// Middlewares
 app.use(cors());
-app.use(json());
+app.use(express.json());
 
-// Routes
-import auctionRoutes from "./routes/auctionRoutes.js";
-import bidRoutes from "./routes/bidRoutes.js";
-
-app.use("/api/auctions", auctionRoutes);
-app.use("/api/bids", bidRoutes);
+app.use("/api/users", UsersRouter);
+app.use("/api/items", ItemsRouter);
+app.use("/api/auctions", AuctionsRouter);
+app.use("/api/bids", BidsRouter);
 
 app.get("/", (req, res) => {
-  res.send("Welcome to the Online Bidding API");
+  res.send("Server is running!");
 });
 
-// Set up the server to listen on port 5000
-app.listen(5000, () => {
-  console.log("Server is running on http://localhost:5000");
+app.use((req, res) => {
+  res.status(400).send("Bad Request. route not found");
+});
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server is running on port http://localhost:${PORT}`);
 });
