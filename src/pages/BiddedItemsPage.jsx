@@ -1,40 +1,67 @@
-// src/pages/BiddedItemsPage.jsx
+import React, { useEffect, useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
 
-import React from "react";
-import { useSelector } from "react-redux";
-import { selectBiddedItems } from "../features/bidsSlice";
+const BiddedItemsPage = () => {
+  const { user, isAuthenticated, isLoading } = useAuth0();
+  const [biddedItems, setBiddedItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-function BiddedItemsPage() {
-  const biddedItems = useSelector(selectBiddedItems);
-  const itemCount = biddedItems.length;
-  const totalBidAmount = biddedItems.reduce((total, bid) => total + bid.amount, 0);
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const fetchBiddedItems = async () => {
+        try {
+          setLoading(true);
+          const response = await fetch(`/api/bids/${user.sub}`);
+          const data = await response.json();
+
+          // Check if response is successful and if data exists
+          if (response.ok && data.length) {
+            setBiddedItems(data);
+          } else {
+            setBiddedItems([]);
+          }
+        } catch (err) {
+          setError("Failed to load bidded items");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchBiddedItems();
+    }
+  }, [isAuthenticated, user]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <div>Please log in to view your bidded items.</div>;
+  }
+
+  if (loading) {
+    return <div>Loading your bidded items...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (biddedItems.length === 0) {
+    return <div>You have no bidded items yet.</div>;
+  }
 
   return (
-    <div className="container mx-auto p-6 text-white">
-      <h2 className="text-4xl font-bold mb-6">Current Bidded Items</h2>
-
-      {biddedItems.length > 0 ? (
-        <div className="space-y-4">
-          {biddedItems.map((bid) => (
-            <div key={bid.itemId} className="p-4 border border-gray-700 rounded-lg shadow-md bg-gray-800">
-              <h3 className="text-xl font-semibold">Item ID: {bid.itemId}</h3>
-              <p>Your Bid: £{bid.amount.toFixed(2)}</p>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p>You have not placed any bids. Place bids on items to see them here.</p>
-      )}
-
-      {/* Bidded Summary Section */}
-      <div className="mt-8 p-6 rounded-lg bg-gray-700 text-white shadow-md">
-        <div className="flex justify-between mb-2">
-          <p>Items Bidded ({itemCount})</p>
-          <p>£{totalBidAmount.toFixed(2)}</p>
-        </div>
-      </div>
+    <div>
+      <h1>Your Bidded Items</h1>
+      <ul>
+        {biddedItems.map((item) => (
+          <li key={item.id}>{item.name}</li>
+        ))}
+      </ul>
     </div>
   );
-}
+};
 
 export default BiddedItemsPage;

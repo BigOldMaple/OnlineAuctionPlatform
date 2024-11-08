@@ -1,0 +1,8 @@
+// db/knex.js
+import knex from "knex";
+import knexConfig from "../knexfile.cjs"; // Import knexfile with paths adjusted
+
+// Initialize knex with the development configuration
+const db = knex(knexConfig.development);
+
+export default db;

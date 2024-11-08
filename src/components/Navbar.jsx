@@ -1,24 +1,19 @@
 // src/components/Navbar.jsx
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { FaShoppingBasket } from "react-icons/fa";
-import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { Link, useLocation } from "react-router-dom";
+import { FaShoppingBasket, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import SearchBar from "./SearchBar";
 import { useAuth0 } from "@auth0/auth0-react";
 
 function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const location = useLocation();
 
-  const toggleDropdown = () => {
-    setDropdownOpen(!dropdownOpen);
-  };
+  const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
+  const closeDropdown = () => setDropdownOpen(false);
 
-  const closeDropdown = () => {
-    setDropdownOpen(false);
-  };
-
-  //AuthO
+  // Auth0 hooks for authentication
   const { isAuthenticated, loginWithRedirect, logout, user, isLoading } =
     useAuth0();
 
@@ -40,7 +35,7 @@ function Navbar() {
   ];
 
   return (
-    <nav className="#242424 p-6 ">
+    <nav className="bg-[#242424] p-6">
       <div className="flex justify-between items-center w-full px-4">
         {/* Left: Site name, Categories, and Search Bar */}
         <div className="flex items-center space-x-4">
@@ -52,7 +47,7 @@ function Navbar() {
           <div className="relative">
             <button
               onClick={toggleDropdown}
-              className="btn btn-ghost text-gray-200 hover:bg-gray-700"
+              className="btn btn-ghost text-gray-200 hover:bg-gray-700 flex items-center"
             >
               Categories
               {dropdownOpen ? (
@@ -101,39 +96,42 @@ function Navbar() {
           >
             <FaShoppingBasket size={24} />
           </Link>
-          {location.pathname === "/login" ||
-          location.pathname === "/register" ? (
-            <SocialLinks />
-          ) : (
-            <div className="flex items-center space-x-4">
-              {isAuthenticated ? (
-                <>
-                  {/* Display user information */}
-                  <img
-                    src={user.picture}
-                    alt="User Profile"
-                    className="w-8 h-8 rounded-full"
-                  />
-                  <span className="text-gray-700 font-medium">
-                    {user.nickname}
-                  </span>
-                  <button
-                    onClick={() => logout({ returnTo: window.location.origin })}
-                    className="btn btn-ghost text-gray-200 hover:bg-gray-700"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
+
+          {/* Auth and User Info */}
+          <div className="flex items-center space-x-4">
+            {isLoading ? (
+              <div>Loading...</div> // Display loading state until Auth0 is ready
+            ) : isAuthenticated ? (
+              <>
+                {/* User info display */}
+                {user && (
+                  <>
+                    <img
+                      src={user.picture}
+                      alt="User Profile"
+                      className="w-8 h-8 rounded-full"
+                    />
+                    <span className="text-white font-medium">
+                      {user.nickname}
+                    </span>
+                  </>
+                )}
                 <button
-                  onClick={loginWithRedirect}
+                  onClick={() => logout({ returnTo: window.location.origin })}
                   className="btn btn-ghost text-gray-200 hover:bg-gray-700"
                 >
-                  Login
+                  Logout
                 </button>
-              )}
-            </div>
-          )}
+              </>
+            ) : (
+              <button
+                onClick={loginWithRedirect}
+                className="btn btn-ghost text-gray-200 hover:bg-gray-700"
+              >
+                Login
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </nav>
