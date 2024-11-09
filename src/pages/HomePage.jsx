@@ -22,12 +22,6 @@ function HomePage() {
 
       <div className="space-x-4 mb-8">
         <Link to="/auctions">
-          <button className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
-            Auction List
-          </button>
-        </Link>
-        
-        <Link to="/auctions">
           <button className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600">
             Start Bidding
           </button>
@@ -51,7 +45,7 @@ function HomePage() {
             <strong>View Item Details:</strong> Click on an item to see more details, including the full description, category, and rating. From here, you can decide if you want to place a bid.
           </li>
           <li>
-            <strong>Place a Bid:</strong> To participate in an auction, enter your bid amount and confirm. Make sure to follow any bidding requirements displayed on the item page.
+            <strong>Place a Bid:</strong> To participate in an auction, enter your bid amount and confirm.
           </li>
           <li>
             <strong>Create an Account:</strong> Log in or sign up to track your bidding history and receive updates on your items.
