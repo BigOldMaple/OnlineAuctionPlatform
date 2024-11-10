@@ -1,95 +1,188 @@
-// src/components/SearchBar.jsx
-
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import debounce from "lodash.debounce";
+import { Search, Loader2, ArrowRight } from "lucide-react";
 
 function SearchBar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [isSuggestionsVisible, setIsSuggestionsVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  
   const navigate = useNavigate();
+  const searchRef = useRef(null);
+  const suggestionsRef = useRef(null);
 
   // Function to fetch suggestions based on the current query
   const fetchSuggestions = async (query) => {
+    setIsLoading(true);
     try {
       const response = await axios.get(`https://fakestoreapi.com/products`);
       const items = response.data;
-
-      // Filter items based on the query
       const filteredItems = items.filter((item) =>
         item.title.toLowerCase().includes(query.toLowerCase())
       );
-
-      setSuggestions(filteredItems.slice(0, 5)); // Limit to top 5 suggestions
-      setIsSuggestionsVisible(filteredItems.length > 0); // Show dropdown only if there are suggestions
+      setSuggestions(filteredItems.slice(0, 5));
+      setIsSuggestionsVisible(filteredItems.length > 0);
     } catch (error) {
-      console.error("Error fetching items for suggestions:", error);
+      console.error("Error fetching suggestions:", error);
+      setSuggestions([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Debounced function to reduce the frequency of API calls
-  const debouncedFetchSuggestions = useCallback(debounce(fetchSuggestions, 300), []);
+  const debouncedFetchSuggestions = useCallback(
+    debounce(fetchSuggestions, 300),
+    []
+  );
 
-  // Handle changes in the search bar input
+  // Handle click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target) &&
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target)
+      ) {
+        setIsSuggestionsVisible(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
-
+    setSelectedIndex(-1);
+    
     if (query.trim()) {
       debouncedFetchSuggestions(query);
     } else {
-      setIsSuggestionsVisible(false); // Hide dropdown if the input is empty
+      setIsSuggestionsVisible(false);
     }
   };
 
-  // Handle clicking a suggestion
   const handleSuggestionClick = (suggestion) => {
-    setSearchQuery(""); // Clear search bar after clicking a suggestion
-    setIsSuggestionsVisible(false); // Hide suggestions
+    setSearchQuery("");
+    setIsSuggestionsVisible(false);
     navigate(`/auction/${suggestion.id}`);
   };
 
-  // Handle search submission
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/search?query=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery(""); // Clear search bar after submission
-      setIsSuggestionsVisible(false); // Hide suggestions
+      setSearchQuery("");
+      setIsSuggestionsVisible(false);
+    }
+  };
+
+  // Keyboard navigation
+  const handleKeyDown = (e) => {
+    if (!isSuggestionsVisible) return;
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setSelectedIndex(prev => 
+          prev < suggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setSelectedIndex(prev => prev > -1 ? prev - 1 : prev);
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (selectedIndex > -1) {
+          handleSuggestionClick(suggestions[selectedIndex]);
+        } else {
+          handleSearchSubmit(e);
+        }
+        break;
+      case "Escape":
+        setIsSuggestionsVisible(false);
+        break;
+      default:
+        break;
     }
   };
 
   return (
-    <form onSubmit={handleSearchSubmit} className="relative w-80 md:w-96">
-      <input
-        type="text"
-        value={searchQuery}
-        onChange={handleSearchChange}
-        placeholder="Search auctions..."
-        className="p-2 w-full rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none"
-      />
-      <button type="submit" className="absolute right-0 top-0 h-full p-2 text-white hover:text-gray-400">
-        🔍
-      </button>
+    <div className="relative w-full max-w-md" ref={searchRef}>
+      <form 
+        onSubmit={handleSearchSubmit}
+        className="relative flex items-center"
+      >
+        <div className="relative w-full">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Search auctions..."
+            className="w-full h-10 pl-10 pr-12 rounded-lg
+              bg-gray-800 dark:bg-gray-700
+              text-gray-200 dark:text-gray-100
+              placeholder-gray-400 dark:placeholder-gray-500
+              border border-gray-700 dark:border-gray-600
+              focus:outline-none focus:ring-2 focus:ring-primary
+              transition-all duration-200"
+            aria-label="Search auctions"
+            aria-expanded={isSuggestionsVisible}
+            role="combobox"
+            aria-controls="search-suggestions"
+            aria-activedescendant={selectedIndex > -1 ? `suggestion-${selectedIndex}` : undefined}
+          />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          {isLoading && (
+            <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-primary animate-spin" />
+          )}
+        </div>
+      </form>
 
+      {/* Suggestions Dropdown */}
       {isSuggestionsVisible && suggestions.length > 0 && (
-        <div className="absolute top-full mt-2 w-full bg-gray-700 shadow-lg rounded-lg z-10">
-          <ul className="py-2">
-            {suggestions.map((suggestion) => (
+        <div 
+          ref={suggestionsRef}
+          className="absolute top-full left-0 right-0 mt-2
+            bg-gray-800 dark:bg-gray-700
+            border border-gray-700 dark:border-gray-600
+            rounded-lg shadow-lg overflow-hidden z-50"
+          id="search-suggestions"
+          role="listbox"
+        >
+          <ul className="py-1">
+            {suggestions.map((suggestion, index) => (
               <li
                 key={suggestion.id}
+                id={`suggestion-${index}`}
+                role="option"
+                aria-selected={selectedIndex === index}
                 onClick={() => handleSuggestionClick(suggestion)}
-                className="px-4 py-2 cursor-pointer text-white hover:bg-gray-600"
+                className={`flex items-center justify-between px-4 py-2 cursor-pointer
+                  ${selectedIndex === index 
+                    ? 'bg-gray-700 dark:bg-gray-600 text-white' 
+                    : 'text-gray-200 dark:text-gray-100 hover:bg-gray-700 dark:hover:bg-gray-600'}
+                  transition-colors duration-150`}
               >
-                {suggestion.title}
+                <span className="truncate">{suggestion.title}</span>
+                <ArrowRight className={`h-4 w-4 ml-2 
+                  ${selectedIndex === index ? 'opacity-100' : 'opacity-0'} 
+                  transition-opacity duration-150`}
+                />
               </li>
             ))}
           </ul>
         </div>
       )}
-    </form>
+    </div>
   );
 }
 

@@ -1,23 +1,24 @@
+// db/routes/userRoutes.js
 import express from "express";
 import {
   getUsers,
   getUser,
-  createUser,
+  addNewUser,
   removeUser,
+  handleAuth0User,
+  getAuth0User
 } from "../controllers/userController.js";
 
 const router = express.Router();
 
-// Route to get all subscribers
+// Existing routes
 router.get("/", getUsers);
-
-// Route to get a subscriber by ID
 router.get("/:id", getUser);
-
-// Route to add a new subscriber
-router.post("/", createUser);
-
-// Route to delete a subscriber by ID
+router.post("/", addNewUser);
 router.delete("/:id", removeUser);
+
+// Auth0 routes
+router.post("/auth0", handleAuth0User);
+router.get("/auth0/:auth0Id", getAuth0User);
 
 export default router;

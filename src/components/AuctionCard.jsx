@@ -1,48 +1,78 @@
-/**
- * AuctionCard Component
- *
- * The `AuctionCard` component is a presentational component that displays a single auction item's
- * details in a styled card format. It receives `item` as a prop, which contains all necessary data 
- * about the auction item (title, description, price, category, image, and rating).
- *
- * Key Elements:
- * - **Image**: Displays the item's image, centered and cropped within the designated space.
- * - **Title**: Shows the title of the auction item, truncated if it’s too long.
- * - **Description**: Brief description of the item, limited to three lines for consistent card height.
- * - **Price**: Displays the current price or starting bid of the item.
- * - **Category**: The category of the item (electronics, jewelry).
- * - **Rating**: Displays the item’s rating and the number of reviews.
- *
- * Styling:
- * - The card is designed with a fixed width and height for uniformity in a grid layout.
- * - Includes background, border, and text styling for a dark theme, with colors indicating
- *   different text elements (green for price, blue for category, yellow for rating).
- */
-// src/components/AuctionCard.jsx
-
 import React from "react";
 import { Link } from "react-router-dom";
+import { useTheme } from "../contexts/ThemeContext";
+import { Star } from "lucide-react";
 
 function AuctionCard({ item }) {
+  const { isDarkMode } = useTheme();
+
   return (
-    <Link to={`/auction/${item.id}`} className="w-72 h-96 p-4 border border-gray-700 rounded-lg shadow-md bg-gray-900 flex flex-col transform transition-transform duration-100 hover:scale-105 hover:shadow-lg hover:bg-gray-800">
-      <div className="h-48 flex justify-center items-center mb-4 overflow-hidden">
-        <img src={item.image} alt={item.title} className="object-cover h-full" />
+    <Link
+      to={`/auction/${item.id}`}
+      className="w-72 h-96 p-4 rounded-lg shadow-lg flex flex-col
+        transform transition-all duration-200
+        hover:scale-105 
+        bg-white dark:bg-gray-800
+        border border-gray-200 dark:border-gray-700
+        hover:shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700"
+    >
+      {/* Image Container */}
+      <div className="h-48 flex justify-center items-center mb-4 overflow-hidden rounded-md bg-gray-100 dark:bg-gray-900">
+        <img
+          src={item.image}
+          alt={item.title}
+          className="object-contain h-full w-full"
+        />
       </div>
-      <h3 className="text-xl font-semibold text-white truncate">{item.title}</h3>
-      <p className="text-gray-400 mt-2 overflow-hidden" style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" }}>
+
+      {/* Title */}
+      <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 truncate">
+        {item.title}
+      </h3>
+
+      {/* Description */}
+      <p
+        className="text-gray-600 dark:text-gray-300 mt-2 overflow-hidden text-sm"
+        style={{
+          display: "-webkit-box",
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: "vertical"
+        }}
+      >
         {item.description}
       </p>
-      <div className="mt-auto">
-        <p className="text-green-400 mt-2">Price: £{item.price}</p>
-        <p className="text-blue-300">Category: {item.category}</p>
-        <p className="text-yellow-400">Rating: {item.rating.rate} ({item.rating.count} reviews)</p>
+
+      {/* Details Section */}
+      <div className="mt-auto space-y-2">
+        <div className="flex justify-between items-center">
+          <span className="text-gray-600 dark:text-gray-400">Price:</span>
+          <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+            £{item.price}
+          </span>
+        </div>
+
+        <div className="flex justify-between items-center">
+          <span className="text-gray-600 dark:text-gray-400">Category:</span>
+          <span className="text-blue-600 dark:text-blue-400 font-medium">
+            {item.category}
+          </span>
+        </div>
+
+        <div className="flex justify-between items-center">
+          <span className="text-gray-600 dark:text-gray-400">Rating:</span>
+          <div className="flex items-center gap-1">
+            <Star className="h-4 w-4 text-amber-500 fill-current" />
+            <span className="text-amber-500">
+              {item.rating.rate}
+              <span className="text-gray-500 dark:text-gray-400 text-sm ml-1">
+                ({item.rating.count})
+              </span>
+            </span>
+          </div>
+        </div>
       </div>
     </Link>
   );
 }
 
 export default AuctionCard;
-
-
-
