@@ -1,3 +1,5 @@
+// Import necessary modules
+import bcrypt from "bcrypt";
 import {
   getAllUsers,
   getUserById,
@@ -31,21 +33,29 @@ async function getUser(req, res) {
   }
 }
 
-// Add a new subscriber
+// Create a new user
 async function createUser(req, res) {
   try {
-    // Map request body to match database column names
-    const newUser = {
-      firstname: req.body.firstname, // lowercase to match DB column
-      lastname: req.body.lastname,
-      email: req.body.email,
-    };
+    const { firstname, lastname, email, password } = req.body;
 
-    const result = await addUser(newUser);
-    return res.status(201).json(result);
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Use the addUser function to insert the user and get the new user’s ID
+    const newUser = await addUser({
+      firstname,
+      lastname,
+      email,
+      password: hashedPassword,
+    });
+
+    // Respond with a success message and the new user’s ID
+    res
+      .status(201)
+      .json({ message: "User created successfully", userId: newUser.id });
   } catch (error) {
-    console.error(error); // Check this log in your backend console for details
-    return res.status(500).json({ error: "Failed to add subscriber" });
+    console.error(error);
+    res.status(500).json({ error: "Error creating user" });
   }
 }
 
@@ -64,4 +74,5 @@ async function removeUser(req, res) {
   }
 }
 
+// Export all functions
 export { getUsers, getUser, createUser, removeUser };

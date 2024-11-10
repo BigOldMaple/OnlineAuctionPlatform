@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router } from "react-router-dom";
-import Navbar from "./Components/Navbar"; // Ensure consistent capitalization in import path
+import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import AppRouter from "./Router";
 import { ToastContainer } from "react-toastify";
@@ -11,9 +11,8 @@ function App() {
     <Router>
       <div className="flex flex-col min-h-screen">
         <Navbar />
-
         <main className="flex-grow max-w-screen-lg mx-auto p-4">
-          <AppRouter /> {/* Centralized routing handled in AppRouter */}
+          <AppRouter />
           <ToastContainer />
         </main>
 

@@ -5,7 +5,7 @@ import UsersRouter from "./routes/userRoutes.js";
 import ItemsRouter from "./routes/itemsRoutes.js";
 import AuctionsRouter from "./routes/auctionRoutes.js";
 import BidsRouter from "./routes/bidRoutes.js";
-
+import loginRouter from "./routes/loginRoute.js";
 dotenv.config();
 
 const app = express();
@@ -18,6 +18,7 @@ app.use("/api/users", UsersRouter);
 app.use("/api/items", ItemsRouter);
 app.use("/api/auctions", AuctionsRouter);
 app.use("/api/bids", BidsRouter);
+app.use(loginRouter);
 
 app.get("/", (req, res) => {
   res.send("Server is running!");

@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { FaShoppingBasket, FaChevronDown, FaChevronUp, FaBars, FaTimes } from "react-icons/fa";
+import {
+  FaShoppingBasket,
+  FaChevronDown,
+  FaChevronUp,
+  FaBars,
+  FaTimes,
+} from "react-icons/fa";
 import SearchBar from "./SearchBar";
 import { useAuth0 } from "@auth0/auth0-react";
 
@@ -13,7 +19,8 @@ function Navbar() {
   const closeDropdown = () => setDropdownOpen(false);
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
-  const { isAuthenticated, loginWithRedirect, logout, user, isLoading } = useAuth0();
+  const { isAuthenticated, loginWithRedirect, logout, user, isLoading } =
+    useAuth0();
 
   const categories = [
     "Electronics",
@@ -29,20 +36,18 @@ function Navbar() {
   return (
     <nav className="bg-[#242424] p-4 lg:p-6">
       <div className="flex justify-between items-center w-full px-4">
-        {/* Left: Site name and Categories */}
         <div className="flex items-center space-x-2 lg:space-x-4">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="text-white text-xl lg:text-2xl font-bold whitespace-nowrap overflow-hidden text-ellipsis"
           >
             Auction Site
           </Link>
 
-          {/* Categories Dropdown - Always Visible */}
           <div className="relative">
             <button
               onClick={toggleDropdown}
-              className="btn btn-ghost text-gray-200 hover:bg-gray-700 flex items-center whitespace-nowrap overflow-hidden text-ellipsis text-sm lg:text-base"
+              className="btn btn-ghost text-gray-200 hover:bg-gray-700 flex items-center"
             >
               Categories
               {dropdownOpen ? (
@@ -73,15 +78,12 @@ function Navbar() {
             )}
           </div>
 
-          {/* Search Bar - Visible on screens 750px and above */}
           <div className="hidden md:block">
             <SearchBar />
           </div>
         </div>
 
-        {/* Right: Hamburger Menu for Mobile */}
         <div className="flex items-center space-x-2 lg:space-x-4">
-          {/* Hamburger Icon for screens 1000px and below */}
           <button
             className="text-white md:block lg:hidden"
             onClick={toggleMenu}
@@ -89,7 +91,6 @@ function Navbar() {
             {menuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
           </button>
 
-          {/* Right-side Links - Visible on screens above 1000px */}
           <div className="hidden lg:flex items-center space-x-4">
             <Link
               to="/auctions"
@@ -104,7 +105,17 @@ function Navbar() {
               <FaShoppingBasket size={24} />
             </Link>
 
-            {/* Auth and User Info */}
+            {/* Register Button */}
+            {!isAuthenticated && (
+              <Link
+                to="/register"
+                className="btn btn-ghost text-gray-200 hover:bg-gray-700"
+              >
+                Register
+              </Link>
+            )}
+
+            {/* Authentication Buttons */}
             {isLoading ? (
               <div>Loading...</div>
             ) : isAuthenticated ? (
@@ -129,25 +140,30 @@ function Navbar() {
                 </button>
               </>
             ) : (
-              <button
-                onClick={loginWithRedirect}
-                className="btn btn-ghost text-gray-200 hover:bg-gray-700"
-              >
-                Login
-              </button>
+              <>
+                <button
+                  onClick={loginWithRedirect}
+                  className="btn btn-ghost text-gray-200 hover:bg-gray-700"
+                >
+                  Login with OAuth
+                </button>
+                <Link
+                  to="/login"
+                  className="btn btn-ghost text-gray-200 hover:bg-gray-700"
+                >
+                  Login (DB)
+                </Link>
+              </>
             )}
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {menuOpen && (
         <div className="bg-[#242424] p-2 space-y-2 md:block lg:hidden">
-          {/* Search Bar - Only Visible below 750px */}
           <div className="block md:hidden">
             <SearchBar />
           </div>
-
           <Link
             to="/auctions"
             className="block text-gray-200 hover:bg-gray-700 py-1 text-sm"
@@ -161,6 +177,13 @@ function Navbar() {
             onClick={() => setMenuOpen(false)}
           >
             <FaShoppingBasket size={20} />
+          </Link>
+          <Link
+            to="/register"
+            className="block text-gray-200 hover:bg-gray-700 py-1 text-sm"
+            onClick={() => setMenuOpen(false)}
+          >
+            Register
           </Link>
           {isAuthenticated ? (
             <button

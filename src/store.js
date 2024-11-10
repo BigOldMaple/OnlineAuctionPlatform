@@ -6,7 +6,7 @@ import userReducer from "./features/userSlice";
 
 const store = configureStore({
   reducer: {
-    bids: bidsReducer, // Renamed to 'bids' for tracking bid items
+    bids: bidsReducer,
     user: userReducer,
   },
 });
