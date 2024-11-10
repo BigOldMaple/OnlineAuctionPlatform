@@ -22,6 +22,12 @@ function Navbar() {
   const { isAuthenticated, loginWithRedirect, logout, user, isLoading } =
     useAuth0();
 
+  console.log({
+    isAuthenticated,
+    user,
+    isLoading,
+  });
+
   const categories = [
     "Electronics",
     "Women's Clothing",
