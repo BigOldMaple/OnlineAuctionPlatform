@@ -1,15 +1,17 @@
-// App.jsx
-import React, { Suspense } from "react";
+// src/App.jsx
+import React, { useEffect } from "react";
 import { BrowserRouter as Router } from "react-router-dom";
-import { ToastContainer, Slide } from "react-toastify";
+import { ToastContainer, toast, Slide } from "react-toastify";
+import { Provider } from "react-redux";
+import { Auth0Provider, useAuth0 } from "@auth0/auth0-react"; // Add Auth0Provider here
+import store from "./store";
 import "react-toastify/dist/ReactToastify.css";
 import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
-import Auth0ProviderWithHistory from "./auth0Provider";
 
 // Components
-import Navbar from "./Components/Navbar";
+import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import AppRouter from "./router";
+import AppRouter from "./Router";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 // Loading fallback component
@@ -22,52 +24,105 @@ const LoadingFallback = () => (
 // Wrapper component to use theme context
 const AppContent = () => {
   const { isDarkMode } = useTheme();
+  const { user, isAuthenticated } = useAuth0();
  
+  useEffect(() => {
+    const syncUserWithDatabase = async () => {
+      if (isAuthenticated && user) {
+        try {
+          console.log('Attempting to sync user:', {
+            auth0_id: user.sub,
+            email: user.email,
+            firstname: user.given_name || user.nickname || user.name?.split(' ')[0] || 'Anonymous',
+            lastname: user.family_name || user.name?.split(' ').slice(1).join(' ') || 'User'
+          });
+  
+          const response = await fetch('http://localhost:5005/api/users/auth0', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              auth0_id: user.sub,
+              email: user.email,
+              firstname: user.given_name || user.nickname || user.name?.split(' ')[0] || 'Anonymous',
+              lastname: user.family_name || user.name?.split(' ').slice(1).join(' ') || 'User'
+            }),
+          });
+  
+          const data = await response.text(); // Get raw response text
+          console.log('Raw response:', data);
+          
+          if (!response.ok) {
+            throw new Error(`Server responded with ${response.status}: ${data}`);
+          }
+  
+          const userData = JSON.parse(data);
+          console.log('User synced successfully:', userData);
+          toast.success('Successfully synced user data');
+        } catch (error) {
+          console.error('Detailed sync error:', error);
+          toast.error(`Failed to sync user data: ${error.message}`);
+        }
+      }
+    };
+  
+    syncUserWithDatabase();
+  }, [isAuthenticated, user]);
+  
+
   return (
-    <ErrorBoundary>
-      <Router>
-        <Auth0ProviderWithHistory>
-          <div className="flex flex-col min-h-screen bg-base-100 transition-colors">
-            <Navbar />
-           
-            <main className="flex-grow w-full">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <Suspense fallback={<LoadingFallback />}>
-                  <ErrorBoundary>
-                    <AppRouter />
-                  </ErrorBoundary>
-                </Suspense>
-              </div>
-            </main>
-            <Footer />
-            <ToastContainer
-              position="bottom-right"
-              transition={Slide}
-              autoClose={4000}
-              hideProgressBar={false}
-              newestOnTop
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme={isDarkMode ? "dark" : "light"}
-              limit={3}
-              className="toast-container"
-            />
-          </div>
-        </Auth0ProviderWithHistory>
-      </Router>
-    </ErrorBoundary>
+    <div className="flex flex-col min-h-screen bg-base-100 transition-colors">
+      <Navbar />
+      
+      <main className="flex-grow w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <React.Suspense fallback={<LoadingFallback />}>
+            <ErrorBoundary>
+              <AppRouter />
+            </ErrorBoundary>
+          </React.Suspense>
+        </div>
+      </main>
+      <Footer />
+      <ToastContainer
+        position="bottom-right"
+        transition={Slide}
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme={isDarkMode ? "dark" : "light"}
+        limit={3}
+        className="toast-container"
+      />
+    </div>
   );
 };
 
-// Main App component
 function App() {
   return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
+    <Auth0Provider
+      domain={import.meta.env.VITE_AUTH0_DOMAIN}
+      clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
+      authorizationParams={{
+        redirect_uri: window.location.origin
+      }}
+    >
+      <Provider store={store}>
+        <ThemeProvider>
+          <Router>
+            <ErrorBoundary>
+              <AppContent />
+            </ErrorBoundary>
+          </Router>
+        </ThemeProvider>
+      </Provider>
+    </Auth0Provider>
   );
 }
 
