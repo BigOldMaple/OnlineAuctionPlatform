@@ -5,6 +5,9 @@ import UsersRouter from "./routes/userRoutes.js";
 import ItemsRouter from "./routes/itemsRoutes.js";
 import AuctionsRouter from "./routes/auctionRoutes.js";
 import BidsRouter from "./routes/bidRoutes.js";
+
+import loginRouter from "./routes/loginRoute.js";
+
 import db from "./db/db.js"; // Import the database connection
 
 dotenv.config();
@@ -44,6 +47,7 @@ app.use("/api/users", UsersRouter);
 app.use("/api/items", ItemsRouter);
 app.use("/api/auctions", AuctionsRouter);
 app.use("/api/bids", BidsRouter);
+app.use(loginRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

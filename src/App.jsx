@@ -1,6 +1,7 @@
 // src/App.jsx
 import React, { useEffect } from "react";
 import { BrowserRouter as Router } from "react-router-dom";
+
 import { ToastContainer, toast, Slide } from "react-toastify";
 import { Provider } from "react-redux";
 import { Auth0Provider, useAuth0 } from "@auth0/auth0-react"; // Add Auth0Provider here
@@ -13,6 +14,17 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import AppRouter from "./Router";
 import ErrorBoundary from "./components/ErrorBoundary";
+
+
+// function App() {
+//   return (
+//     <Router>
+//       <div className="flex flex-col min-h-screen">
+//         <Navbar />
+//         <main className="flex-grow max-w-screen-lg mx-auto p-4">
+//           <AppRouter />
+//           <ToastContainer />
+//         </main>
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -70,6 +82,7 @@ const AppContent = () => {
     syncUserWithDatabase();
   }, [isAuthenticated, user]);
   
+
 
   return (
     <div className="flex flex-col min-h-screen bg-base-100 transition-colors">

@@ -1,4 +1,7 @@
-// db/controllers/userController.js
+
+
+import bcrypt from "bcrypt";
+
 import {
   getAllUsers,
   getUserById,
@@ -84,32 +87,58 @@ export const getUser = async (req, res) => {
   }
 };
 
-export const addNewUser = async (req, res) => {
+
+// Create a new user
+async function createUser(req, res) {
   try {
-    const userData = {
-      firstname: req.body.firstname?.trim(),
-      lastname: req.body.lastname?.trim(),
-      email: req.body.email?.trim().toLowerCase(),
-    };
+    const { firstname, lastname, email, password } = req.body;
 
-    const validationErrors = validateUserData(userData);
-    if (validationErrors.length > 0) {
-      return res.status(400).json({
-        error: 'Validation Error',
-        messages: validationErrors
-      });
-    }
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const result = await createUser(userData);
-    return res.status(201).json({
-      success: true,
-      data: result,
-      message: 'User created successfully'
+    // Use the addUser function to insert the user and get the new user’s ID
+    const newUser = await addUser({
+      firstname,
+      lastname,
+      email,
+      password: hashedPassword,
     });
+
+    // Respond with a success message and the new user’s ID
+    res
+      .status(201)
+      .json({ message: "User created successfully", userId: newUser.id });
   } catch (error) {
-    return handleError(error, res, 'Failed to create user');
-  }
-};
+    console.error(error);
+    res.status(500).json({ error: "Error creating user" });
+
+// export const addNewUser = async (req, res) => {
+//   try {
+//     const userData = {
+//       firstname: req.body.firstname?.trim(),
+//       lastname: req.body.lastname?.trim(),
+//       email: req.body.email?.trim().toLowerCase(),
+//     };
+
+//     const validationErrors = validateUserData(userData);
+//     if (validationErrors.length > 0) {
+//       return res.status(400).json({
+//         error: 'Validation Error',
+//         messages: validationErrors
+//       });
+//     }
+
+//     const result = await createUser(userData);
+//     return res.status(201).json({
+//       success: true,
+//       data: result,
+//       message: 'User created successfully'
+//     });
+//   } catch (error) {
+//     return handleError(error, res, 'Failed to create user');
+
+//   }
+// };
 
 export const removeUser = async (req, res) => {
   try {
@@ -197,19 +226,24 @@ export const getAuth0User = async (req, res) => {
       });
     }
 
-    const user = await getUserByAuth0Id(auth0Id);
-    if (!user) {
-      return res.status(404).json({
-        error: 'Not Found',
-        message: 'User not found'
-      });
-    }
 
-    return res.status(200).json({
-      success: true,
-      data: user
-    });
-  } catch (error) {
-    return handleError(error, res, 'Failed to fetch Auth0 user');
-  }
-};
+// Export all functions
+export { getUsers, getUser, createUser, removeUser };
+
+//     const user = await getUserByAuth0Id(auth0Id);
+//     if (!user) {
+//       return res.status(404).json({
+//         error: 'Not Found',
+//         message: 'User not found'
+//       });
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       data: user
+//     });
+//   } catch (error) {
+//     return handleError(error, res, 'Failed to fetch Auth0 user');
+//   }
+// };
+
