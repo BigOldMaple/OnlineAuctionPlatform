@@ -207,6 +207,11 @@ export const createOrUpdateUser = async (userData) => {
   const trx = await db.transaction();
   
   try {
+    console.log('Creating/Updating user with data:', {
+      ...userData,
+      auth0_id: '[REDACTED]'
+    });
+
     const existingUser = await trx("users")
       .where({ auth0_id: userData.auth0_id })
       .first();
@@ -218,9 +223,9 @@ export const createOrUpdateUser = async (userData) => {
       [result] = await trx("users")
         .where({ id: existingUser.id })
         .update({
-          firstname: userData.firstname,
-          lastname: userData.lastname,
-          email: userData.email.toLowerCase(),
+          firstname: userData.firstname || existingUser.firstname,
+          lastname: userData.lastname || existingUser.lastname,
+          email: userData.email || existingUser.email,
           updated_at: trx.fn.now()
         })
         .returning("*");
@@ -230,7 +235,7 @@ export const createOrUpdateUser = async (userData) => {
         .insert({
           firstname: userData.firstname,
           lastname: userData.lastname,
-          email: userData.email.toLowerCase(),
+          email: userData.email,
           auth0_id: userData.auth0_id,
           created_at: trx.fn.now(),
           updated_at: trx.fn.now()

@@ -38,40 +38,61 @@ const AppContent = () => {
         setIsSyncing(true);
         
         try {
+          console.log('Auth0 user data received:', {
+            ...user,
+            sub: '[REDACTED]'
+          });
+    
+          // Check for email in various possible locations
+          const userEmail = user.email || 
+                           user.emails?.[0] || 
+                           `${user.nickname?.replace(/\s+/g, '.')}@facebook.com`.toLowerCase();
+    
+          if (!userEmail) {
+            throw new Error('No email found in user data');
+          }
+    
+          const userData = {
+            auth0_id: user.sub,
+            email: userEmail,
+            firstname: user.given_name || user.nickname?.split(' ')[0] || user.name?.split(' ')[0] || 'Anonymous',
+            lastname: user.family_name || user.name?.split(' ').slice(1).join(' ') || user.nickname?.split(' ').slice(1).join(' ') || 'User'
+          };
+    
+          console.log('Attempting to sync user with data:', {
+            ...userData,
+            auth0_id: '[REDACTED]'
+          });
+    
           const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/users/auth0`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              auth0_id: user.sub,
-              email: user.email,
-              firstname: user.given_name || user.nickname || user.name?.split(' ')[0] || 'Anonymous',
-              lastname: user.family_name || user.name?.split(' ').slice(1).join(' ') || 'User'
-            }),
+            body: JSON.stringify(userData)
           });
-
+    
           if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(`Server responded with ${response.status}: ${errorData}`);
+            const errorData = await response.json();
+            console.error('Server response error:', errorData);
+            throw new Error(`Server responded with ${response.status}: ${JSON.stringify(errorData)}`);
           }
-
-          const userData = await response.json();
-          console.log('User synced successfully:', userData);
+    
+          const responseData = await response.json();
+          console.log('User synced successfully:', {
+            ...responseData,
+            auth0_id: '[REDACTED]'
+          });
           
-          // Set sync as complete
           setSyncComplete(true);
           
-          // Only show success message on first sync
           if (!window.localStorage.getItem('userSynced')) {
             toast.success('Welcome! Your account has been synchronized');
             window.localStorage.setItem('userSynced', 'true');
           }
         } catch (error) {
           console.error('User sync error:', error);
-          toast.error('Failed to sync account: ' + error.message);
-          
-          // Clear sync flag on error to allow retry
+          toast.error(`Failed to sync account: ${error.message}`);
           window.localStorage.removeItem('userSynced');
         } finally {
           setIsSyncing(false);

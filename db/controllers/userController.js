@@ -129,33 +129,59 @@ export const removeUser = async (req, res) => {
 
 export const handleAuth0User = async (req, res) => {
   try {
-    console.log('Auth0 User Sync Request:', {
-      body: {
-        ...req.body,
-        auth0_id: req.body.auth0_id ? '[REDACTED]' : undefined
-      }
+    console.log('Received Auth0 user data:', {
+      ...req.body,
+      auth0_id: req.body.auth0_id ? '[REDACTED]' : undefined
     });
 
-    const userData = {
-      firstname: req.body.firstname?.trim() || 'Anonymous',
-      lastname: req.body.lastname?.trim() || 'User',
-      email: req.body.email?.trim().toLowerCase(),
-      auth0_id: req.body.auth0_id
-    };
+    // Extract and validate required fields
+    const { auth0_id, email, firstname, lastname } = req.body;
 
-    if (!userData.auth0_id || !userData.email) {
+    // Validate auth0_id
+    if (!auth0_id) {
       return res.status(400).json({
-        error: 'Missing required fields',
-        required: ['auth0_id', 'email'],
-        received: Object.keys(userData)
+        error: 'Missing auth0_id',
+        message: 'Auth0 ID is required'
       });
     }
 
-    const user = await createOrUpdateUser(userData);
-    console.log('User synced successfully:', {
-      ...user,
+    // Validate email with fallback
+    const userEmail = email || `${auth0_id}@temp.user`;
+    
+    // Prepare user data with defaults
+    const userData = {
+      auth0_id,
+      email: userEmail.toLowerCase(),
+      firstname: firstname?.trim() || 'Anonymous',
+      lastname: lastname?.trim() || 'User'
+    };
+
+    console.log('Processing user data:', {
+      ...userData,
       auth0_id: '[REDACTED]'
     });
+
+    // Check for existing user
+    let user = await getUserByAuth0Id(auth0_id);
+    
+    if (user) {
+      // Update existing user
+      user = await createOrUpdateUser({
+        ...user,
+        ...userData
+      });
+      console.log('Updated existing user:', {
+        ...user,
+        auth0_id: '[REDACTED]'
+      });
+    } else {
+      // Create new user
+      user = await createOrUpdateUser(userData);
+      console.log('Created new user:', {
+        ...user,
+        auth0_id: '[REDACTED]'
+      });
+    }
 
     return res.status(200).json({
       success: true,
@@ -165,8 +191,9 @@ export const handleAuth0User = async (req, res) => {
   } catch (error) {
     console.error('Error in handleAuth0User:', error);
     return res.status(500).json({
-      error: 'Failed to process Auth0 user',
-      message: error.message
+      error: 'Server Error',
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
