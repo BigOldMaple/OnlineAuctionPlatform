@@ -1,31 +1,72 @@
+// db/routes/bidRoutes.js
 import express from "express";
-import {
-  getBidsByAuctionID,
-  getAllBidsController,
-  getBidByBidID,
-  getBidsByUserID,
-  createBid,
-  removeBid,
-} from "../controllers/bidController.js"; // Import controller functions
+import { createBid } from "../controllers/bidController.js";
 
 const router = express.Router();
 
-// Route to get all bids for a specific auction
-router.get("/auction/:auction_id", getBidsByAuctionID);
+router.get("/auction/:auction_id", async (req, res) => {
+  try {
+    const { auction_id } = req.params;
+    // Implementation pending
+    res.status(501).json({ 
+      message: "Get bids by auction ID not implemented yet",
+      auction_id 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-// Route to get all bids (no filters)
-router.get("/", getAllBidsController);
+router.get("/", async (req, res) => {
+  try {
+    // Implementation pending
+    res.status(501).json({ 
+      message: "Get all bids not implemented yet" 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-// Route to get a bid by ID
-router.get("/:id", getBidByBidID);
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Implementation pending
+    res.status(501).json({ 
+      message: "Get bid by ID not implemented yet",
+      id 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-// Route to get all bids by a specific user
-router.get("/user/:user_id", getBidsByUserID);
+router.get("/user/:user_id", async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    // Implementation pending
+    res.status(501).json({ 
+      message: "Get bids by user ID not implemented yet",
+      user_id 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-// Route to place a new bid
 router.post("/", createBid);
 
-// Route to delete a bid by ID
-router.delete("/:id", removeBid);
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Implementation pending
+    res.status(501).json({ 
+      message: "Delete bid not implemented yet",
+      id 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 export default router;

@@ -4,29 +4,18 @@ import {
   getItems,
   getItem,
   createItem,
-  updateItem,
-  deleteItem,
+  updateItemById,
+  deleteItemById,
   syncItem
 } from "../controllers/itemsController.js";
 
 const router = express.Router();
 
-// Get all items
 router.get("/", getItems);
-
-// Get single item by ID
 router.get("/:id", getItem);
-
-// Create new item
 router.post("/", createItem);
-
-// Sync item from external API
 router.post("/sync", syncItem);
-
-// Update item
-router.put("/:id", updateItem);
-
-// Delete item
-router.delete("/:id", deleteItem);
+router.put("/:id", updateItemById);
+router.delete("/:id", deleteItemById);
 
 export default router;

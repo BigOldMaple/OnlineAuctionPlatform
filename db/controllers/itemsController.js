@@ -3,14 +3,11 @@ import {
   getAllItems,
   getItemById,
   addItem,
-  updateItem,
-  deleteItem,
+  updateItem as updateItemModel,
+  deleteItem as deleteItemModel,
   syncItem as syncItemModel
 } from "../models/itemsModel.js";
 
-/**
- * Get all items
- */
 export const getItems = async (req, res) => {
   try {
     const items = await getAllItems();
@@ -27,9 +24,6 @@ export const getItems = async (req, res) => {
   }
 };
 
-/**
- * Get a single item by ID
- */
 export const getItem = async (req, res) => {
   try {
     const { id } = req.params;
@@ -55,14 +49,10 @@ export const getItem = async (req, res) => {
   }
 };
 
-/**
- * Create a new item
- */
 export const createItem = async (req, res) => {
   try {
     const itemData = req.body;
 
-    // Validate required fields
     if (!itemData.name || !itemData.starting_price) {
       return res.status(400).json({
         error: 'Missing required fields',
@@ -86,15 +76,12 @@ export const createItem = async (req, res) => {
   }
 };
 
-/**
- * Update an existing item
- */
 export const updateItemById = async (req, res) => {
   try {
     const { id } = req.params;
     const itemData = req.body;
 
-    const updatedItem = await updateItem(id, itemData);
+    const updatedItem = await updateItemModel(id, itemData);
     
     if (!updatedItem) {
       return res.status(404).json({
@@ -117,13 +104,10 @@ export const updateItemById = async (req, res) => {
   }
 };
 
-/**
- * Delete an item
- */
 export const deleteItemById = async (req, res) => {
   try {
     const { id } = req.params;
-    const deleted = await deleteItem(id);
+    const deleted = await deleteItemModel(id);
     
     if (!deleted) {
       return res.status(404).json({
@@ -145,14 +129,10 @@ export const deleteItemById = async (req, res) => {
   }
 };
 
-/**
- * Sync item from external API
- */
 export const syncItem = async (req, res) => {
   try {
     const itemData = req.body;
     
-    // Validate required fields
     if (!itemData.id || !itemData.title || !itemData.price) {
       return res.status(400).json({
         error: 'Missing required fields',
@@ -161,7 +141,6 @@ export const syncItem = async (req, res) => {
       });
     }
 
-    // Transform API data to match our schema
     const transformedData = {
       id: itemData.id,
       name: itemData.title,
@@ -183,13 +162,4 @@ export const syncItem = async (req, res) => {
       message: error.message
     });
   }
-};
-
-// Export all controllers
-export {
-  getItems,
-  getItem,
-  createItem,
-  updateItemById as updateItem,
-  deleteItemById as deleteItem
 };

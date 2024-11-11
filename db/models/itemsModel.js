@@ -5,7 +5,7 @@ import db from "../db/db.js";
  * Get all items from the database
  * @returns {Promise<Array>} Array of item objects
  */
-export const getAllItems = async () => {
+const getAllItems = async () => {
   try {
     const items = await db("items")
       .select("*")
@@ -22,7 +22,7 @@ export const getAllItems = async () => {
  * @param {number} id - The item's ID
  * @returns {Promise<Object|null>} Item object or null if not found
  */
-export const getItemById = async (id) => {
+const getItemById = async (id) => {
   try {
     const item = await db("items")
       .select("*")
@@ -40,7 +40,7 @@ export const getItemById = async (id) => {
  * @param {Object} itemData - The item data to insert
  * @returns {Promise<Object>} Created item object
  */
-export const addItem = async (itemData) => {
+const addItem = async (itemData) => {
   const trx = await db.transaction();
   
   try {
@@ -70,7 +70,7 @@ export const addItem = async (itemData) => {
  * @param {Object} itemData - The updated item data
  * @returns {Promise<Object|null>} Updated item object or null if not found
  */
-export const updateItem = async (id, itemData) => {
+const updateItem = async (id, itemData) => {
   const trx = await db.transaction();
   
   try {
@@ -101,7 +101,7 @@ export const updateItem = async (id, itemData) => {
  * @param {number} id - The item's ID
  * @returns {Promise<boolean>} True if item was deleted, false if item was not found
  */
-export const deleteItem = async (id) => {
+const deleteItem = async (id) => {
   const trx = await db.transaction();
   
   try {
@@ -123,7 +123,7 @@ export const deleteItem = async (id) => {
  * @param {Object} itemData - The item data from external API
  * @returns {Promise<Object>} Synced item object
  */
-export const syncItem = async (itemData) => {
+const syncItem = async (itemData) => {
   const trx = await db.transaction();
   
   try {
@@ -175,7 +175,7 @@ export const syncItem = async (itemData) => {
  * @param {string} category - The category to filter by
  * @returns {Promise<Array>} Array of items in the category
  */
-export const getItemsByCategory = async (category) => {
+const getItemsByCategory = async (category) => {
   try {
     const items = await db("items")
       .select("*")
@@ -193,7 +193,7 @@ export const getItemsByCategory = async (category) => {
  * @param {string} searchTerm - The search term
  * @returns {Promise<Array>} Array of matching items
  */
-export const searchItems = async (searchTerm) => {
+const searchItems = async (searchTerm) => {
   try {
     const items = await db("items")
       .select("*")
@@ -212,7 +212,7 @@ export const searchItems = async (searchTerm) => {
  * @param {number} limit - Number of items to return
  * @returns {Promise<Array>} Array of recent items
  */
-export const getRecentItems = async (limit = 10) => {
+const getRecentItems = async (limit = 10) => {
   try {
     const items = await db("items")
       .select("*")

@@ -3,7 +3,7 @@ import express from "express";
 import {
   getUsers,
   getUser,
-  addNewUser,
+  createUser,
   removeUser,
   handleAuth0User,
   getAuth0User
@@ -11,13 +11,10 @@ import {
 
 const router = express.Router();
 
-// Existing routes
 router.get("/", getUsers);
 router.get("/:id", getUser);
-router.post("/", addNewUser);
+router.post("/", createUser);
 router.delete("/:id", removeUser);
-
-// Auth0 routes
 router.post("/auth0", handleAuth0User);
 router.get("/auth0/:auth0Id", getAuth0User);
 

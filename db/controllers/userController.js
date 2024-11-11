@@ -1,30 +1,139 @@
 // db/controllers/userController.js
+import {
+  getAllUsers,
+  getUserById,
+  createOrUpdateUser,
+  deleteUserById,
+  getUserByAuth0Id
+} from "../models/userModel.js";
 
-const validateAuth0UserData = (userData) => {
-  const errors = [];
-  
-  if (!userData.auth0_id) {
-    errors.push('Auth0 ID is required');
+export const getUsers = async (req, res) => {
+  try {
+    const results = await getAllUsers();
+    return res.status(200).json({
+      success: true,
+      data: results,
+      count: results.length
+    });
+  } catch (error) {
+    console.error("Error in getUsers:", error);
+    return res.status(500).json({
+      error: 'Failed to retrieve users',
+      message: error.message
+    });
   }
-  
-  if (!userData.email) {
-    errors.push('Email is required');
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userData.email)) {
-    errors.push('Invalid email format');
+};
+
+export const getUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id || isNaN(id)) {
+      return res.status(400).json({
+        error: 'Invalid user ID',
+        message: 'User ID must be a valid number'
+      });
+    }
+
+    const user = await getUserById(id);
+    if (!user) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'User not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error("Error in getUser:", error);
+    return res.status(500).json({
+      error: 'Failed to retrieve user',
+      message: error.message
+    });
   }
-  
-  // Firstname and lastname are optional but should be sanitized if present
-  userData.firstname = userData.firstname?.trim() || 'Anonymous';
-  userData.lastname = userData.lastname?.trim() || 'User';
-  
-  return errors;
+};
+
+export const createUser = async (req, res) => {
+  try {
+    const userData = {
+      firstname: req.body.firstname?.trim(),
+      lastname: req.body.lastname?.trim(),
+      email: req.body.email?.trim().toLowerCase(),
+    };
+
+    if (!userData.firstname || !userData.lastname || !userData.email) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        required: ['firstname', 'lastname', 'email'],
+        received: Object.keys(userData)
+      });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(userData.email)) {
+      return res.status(400).json({
+        error: 'Invalid email format',
+        message: 'Please provide a valid email address'
+      });
+    }
+
+    const newUser = await createOrUpdateUser(userData);
+    return res.status(201).json({
+      success: true,
+      data: newUser,
+      message: 'User created successfully'
+    });
+  } catch (error) {
+    console.error("Error in createUser:", error);
+    return res.status(500).json({
+      error: 'Failed to create user',
+      message: error.message
+    });
+  }
+};
+
+export const removeUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id || isNaN(id)) {
+      return res.status(400).json({
+        error: 'Invalid user ID',
+        message: 'User ID must be a valid number'
+      });
+    }
+
+    const deleted = await deleteUserById(id);
+    if (!deleted) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'User not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error("Error in removeUser:", error);
+    return res.status(500).json({
+      error: 'Failed to delete user',
+      message: error.message
+    });
+  }
 };
 
 export const handleAuth0User = async (req, res) => {
   try {
-    console.log('Received Auth0 user data:', {
-      ...req.body,
-      auth0_id: req.body.auth0_id ? '[REDACTED]' : undefined
+    console.log('Auth0 User Sync Request:', {
+      body: {
+        ...req.body,
+        auth0_id: req.body.auth0_id ? '[REDACTED]' : undefined
+      }
     });
 
     const userData = {
@@ -34,49 +143,62 @@ export const handleAuth0User = async (req, res) => {
       auth0_id: req.body.auth0_id
     };
 
-    // Validate user data
-    const validationErrors = validateAuth0UserData(userData);
-    if (validationErrors.length > 0) {
+    if (!userData.auth0_id || !userData.email) {
       return res.status(400).json({
-        error: 'Validation Error',
-        messages: validationErrors
+        error: 'Missing required fields',
+        required: ['auth0_id', 'email'],
+        received: Object.keys(userData)
       });
     }
 
-    // Check for existing user first
-    const existingUser = await getUserByAuth0Id(userData.auth0_id);
+    const user = await createOrUpdateUser(userData);
+    console.log('User synced successfully:', {
+      ...user,
+      auth0_id: '[REDACTED]'
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: user,
+      message: 'User synchronized successfully'
+    });
+  } catch (error) {
+    console.error('Error in handleAuth0User:', error);
+    return res.status(500).json({
+      error: 'Failed to process Auth0 user',
+      message: error.message
+    });
+  }
+};
+
+export const getAuth0User = async (req, res) => {
+  try {
+    const { auth0Id } = req.params;
     
-    let user;
-    if (existingUser) {
-      // Update existing user
-      user = await createOrUpdateUser({
-        ...existingUser,
-        ...userData
+    if (!auth0Id) {
+      return res.status(400).json({
+        error: 'Invalid Request',
+        message: 'Auth0 ID is required'
       });
-      console.log('Updated existing user:', {
-        ...user,
-        auth0_id: '[REDACTED]'
-      });
-    } else {
-      // Create new user
-      user = await createOrUpdateUser(userData);
-      console.log('Created new user:', {
-        ...user,
-        auth0_id: '[REDACTED]'
+    }
+
+    const user = await getUserByAuth0Id(auth0Id);
+    if (!user) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'User not found'
       });
     }
 
     return res.status(200).json({
       success: true,
-      data: user,
-      message: existingUser ? 'User updated successfully' : 'User created successfully'
+      data: user
     });
   } catch (error) {
-    console.error('Error in handleAuth0User:', error);
+    console.error('Error in getAuth0User:', error);
     return res.status(500).json({
-      error: 'Server Error',
-      message: 'Failed to process user data',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: 'Failed to fetch Auth0 user',
+      message: error.message
     });
   }
 };

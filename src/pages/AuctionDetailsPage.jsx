@@ -81,7 +81,9 @@ function AuctionDetailsPage() {
           console.log('Found existing auction:', auctionData);
         }
 
-        setAuction(auctionData.data);
+        if (auctionData && auctionData.data) {
+          setAuction(auctionData.data);
+        }
       } catch (error) {
         console.error("Failed to load auction item:", error);
         toast.error(error.message);
@@ -105,7 +107,6 @@ function AuctionDetailsPage() {
 
   const handleBidSuccess = async (newBidAmount) => {
     try {
-      // Refresh auction data
       const response = await fetch(
         `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/auctions/item/${id}`
       );
@@ -126,6 +127,10 @@ function AuctionDetailsPage() {
       </div>
     );
   }
+
+  // Ensure price values are numbers
+  const currentPrice = auction ? Number(auction.current_bid) || Number(item.price) : Number(item.price);
+  const startingPrice = Number(item.price);
 
   // Format dates
   const startTime = auction ? new Date(auction.start_time) : new Date();
@@ -166,7 +171,7 @@ function AuctionDetailsPage() {
             <div className="flex items-center justify-between sm:justify-start sm:gap-4">
               <span className="text-gray-600 dark:text-gray-400 font-medium">Current Bid:</span>
               <span className="text-success text-lg font-bold">
-                £{(auction?.current_bid || item.price).toFixed(2)}
+                £{currentPrice.toFixed(2)}
               </span>
             </div>
 
@@ -174,7 +179,7 @@ function AuctionDetailsPage() {
             <div className="flex items-center justify-between sm:justify-start sm:gap-4">
               <span className="text-gray-600 dark:text-gray-400 font-medium">Starting Price:</span>
               <span className="text-gray-800 dark:text-gray-200 font-medium">
-                £{item.price.toFixed(2)}
+                £{startingPrice.toFixed(2)}
               </span>
             </div>
 
@@ -196,18 +201,20 @@ function AuctionDetailsPage() {
             </div>
 
             {/* Rating */}
-            <div className="flex items-center justify-between sm:justify-start sm:gap-4">
-              <span className="text-gray-600 dark:text-gray-400 font-medium">Rating:</span>
-              <div className="flex items-center gap-2">
-                <Star className="text-warning h-5 w-5 fill-current" />
-                <span className="text-warning font-medium">
-                  {item.rating.rate}
-                  <span className="text-gray-600 dark:text-gray-400 text-sm ml-1">
-                    ({item.rating.count} reviews)
+            {item.rating && (
+              <div className="flex items-center justify-between sm:justify-start sm:gap-4">
+                <span className="text-gray-600 dark:text-gray-400 font-medium">Rating:</span>
+                <div className="flex items-center gap-2">
+                  <Star className="text-warning h-5 w-5 fill-current" />
+                  <span className="text-warning font-medium">
+                    {item.rating.rate}
+                    <span className="text-gray-600 dark:text-gray-400 text-sm ml-1">
+                      ({item.rating.count} reviews)
+                    </span>
                   </span>
-                </span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -222,25 +229,27 @@ function AuctionDetailsPage() {
         </div>
 
         {/* Auction Details */}
-        <div className="mb-6 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
-          <h3 className="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">
-            Auction Details
-          </h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-gray-600 dark:text-gray-400">Start Time:</span>
-              <p className="font-medium text-gray-800 dark:text-gray-200">
-                {startTime.toLocaleDateString()} {startTime.toLocaleTimeString()}
-              </p>
-            </div>
-            <div>
-              <span className="text-gray-600 dark:text-gray-400">End Time:</span>
-              <p className="font-medium text-gray-800 dark:text-gray-200">
-                {endTime.toLocaleDateString()} {endTime.toLocaleTimeString()}
-              </p>
+        {auction && (
+          <div className="mb-6 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+            <h3 className="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">
+              Auction Details
+            </h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-gray-600 dark:text-gray-400">Start Time:</span>
+                <p className="font-medium text-gray-800 dark:text-gray-200">
+                  {startTime.toLocaleDateString()} {startTime.toLocaleTimeString()}
+                </p>
+              </div>
+              <div>
+                <span className="text-gray-600 dark:text-gray-400">End Time:</span>
+                <p className="font-medium text-gray-800 dark:text-gray-200">
+                  {endTime.toLocaleDateString()} {endTime.toLocaleTimeString()}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Bid Button */}
         <button
@@ -254,7 +263,7 @@ function AuctionDetailsPage() {
       {/* Bid Modal */}
       {isBidModalOpen && (
         <BidModal
-          currentPrice={auction?.current_bid || item.price}
+          currentPrice={currentPrice}
           itemId={auction?.id}
           onClose={closeBidModal}
           onSuccess={handleBidSuccess}
