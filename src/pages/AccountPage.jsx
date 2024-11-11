@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Link } from "react-router-dom";
-import {
-  Loader2,
+import { 
+  Loader2, 
   Clock,
   CheckCircle2,
   XCircle,
   ArrowUpRight,
-  ClockIcon
+  ClockIcon,
+  Settings,
+  Bell,
+  Shield,
+  Trash2
 } from "lucide-react";
 
 function AccountPage() {
@@ -17,65 +21,61 @@ function AccountPage() {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('profile'); // 'profile', 'bids', 'settings'
 
-// Update the useEffect in AccountPage where we process the bids
-useEffect(() => {
-  async function fetchBids() {
-    if (!isAuthenticated || !user?.sub) return;
+  useEffect(() => {
+    async function fetchBids() {
+      if (!isAuthenticated || !user?.sub) return;
 
       try {
         setLoading(true);
         setError(null);
 
-      // First get the user's database ID
-      const userResponse = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/users/auth0/${user.sub}`
-      );
-      
-      if (!userResponse.ok) {
-        throw new Error('Failed to fetch user data');
-      }
+        const userResponse = await fetch(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/users/auth0/${user.sub}`
+        );
+        
+        if (!userResponse.ok) {
+          throw new Error('Failed to fetch user data');
+        }
 
         const userData = await userResponse.json();
         const userId = userData.data?.id;
 
-      if (!userId) {
-        throw new Error('User ID not found');
-      }
-
-      // Then fetch the user's bids
-      const bidsResponse = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/bids/user/${userId}`
-      );
-
-      if (!bidsResponse.ok) {
-        throw new Error('Failed to fetch bids');
-      }
-
-      const bidsData = await bidsResponse.json();
-      
-      // Separate bids into ongoing and past
-      const ongoing = [];
-      const past = [];
-
-      bidsData.data?.forEach(bid => {
-        if (bid.status === 'ongoing') {
-          ongoing.push(bid);
-        } else {
-          past.push(bid);
+        if (!userId) {
+          throw new Error('User ID not found');
         }
-      });
 
-      setBids({
-        ongoing: ongoing.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
-        past: past.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-      });
-    } catch (err) {
-      console.error('Error fetching bids:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
+        const bidsResponse = await fetch(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/bids/user/${userId}`
+        );
+
+        if (!bidsResponse.ok) {
+          throw new Error('Failed to fetch bids');
+        }
+
+        const bidsData = await bidsResponse.json();
+        
+        const ongoing = [];
+        const past = [];
+
+        bidsData.data?.forEach(bid => {
+          if (bid.status === 'ongoing') {
+            ongoing.push(bid);
+          } else {
+            past.push(bid);
+          }
+        });
+
+        setBids({
+          ongoing: ongoing.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
+          past: past.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        });
+      } catch (err) {
+        console.error('Error fetching bids:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     }
-  }
 
     fetchBids();
   }, [isAuthenticated, user]);
@@ -95,7 +95,7 @@ useEffect(() => {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             Please log in to view your account
           </h2>
-          <p className="text-gray-300 mb-4">
+          <p className="text-gray-600 dark:text-gray-300 mb-4">
             You need to be logged in to view your account details and bid history.
           </p>
           <button
@@ -239,51 +239,101 @@ useEffect(() => {
             </div>
           )}
 
-      {/* Ongoing Bids Section */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-          <Clock className="h-5 w-5 text-primary" />
-          Ongoing Auctions ({bids.ongoing.length})
-        </h2>
-        {bids.ongoing.length > 0 ? (
-          <div className="grid gap-4">
-            {bids.ongoing.map((bid) => (
-              <BidCard
-                key={bid.id}
-                bid={bid}
-                status="ongoing"
-              />
-            ))}
+          {/* Ongoing Bids */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+              <Clock className="h-5 w-5 text-primary" />
+              Ongoing Auctions ({bids.ongoing.length})
+            </h2>
+            {bids.ongoing.length > 0 ? (
+              <div className="grid gap-4">
+                {bids.ongoing.map((bid) => (
+                  <BidCard key={bid.id} bid={bid} status="ongoing" />
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600 dark:text-gray-400 text-center py-8 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                No ongoing bids
+              </p>
+            )}
           </div>
-        ) : (
-          <p className="text-gray-400 text-center py-8 bg-gray-800/50 rounded-lg">
-            No ongoing bids
-          </p>
-        )}
-      </div>
 
-      {/* Past Bids Section */}
-      <div>
-        <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-          <CheckCircle2 className="h-5 w-5 text-primary" />
-          Past Auctions ({bids.past.length})
-        </h2>
-        {bids.past.length > 0 ? (
-          <div className="grid gap-4">
-            {bids.past.map((bid) => (
-              <BidCard
-                key={bid.id}
-                bid={bid}
-                status="past"
-              />
-            ))}
+          {/* Past Bids */}
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              Past Auctions ({bids.past.length})
+            </h2>
+            {bids.past.length > 0 ? (
+              <div className="grid gap-4">
+                {bids.past.map((bid) => (
+                  <BidCard key={bid.id} bid={bid} status="past" />
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600 dark:text-gray-400 text-center py-8 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                No past bids
+              </p>
+            )}
           </div>
-        ) : (
-          <p className="text-gray-400 text-center py-8 bg-gray-800/50 rounded-lg">
-            No past bids
-          </p>
-        )}
-      </div>
+        </>
+      )}
+
+      {/* Settings Content */}
+      {activeTab === 'settings' && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Account Settings
+          </h2>
+          <div className="space-y-4">
+            {/* Email Preferences */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div>
+                <h3 className="text-gray-900 dark:text-gray-100 font-medium">
+                  Email Notifications
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                  Receive email updates about your auctions and bids
+                </p>
+              </div>
+              <label className="flex items-center cursor-pointer">
+                <input type="checkbox" className="sr-only peer" />
+                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600" />
+              </label>
+            </div>
+
+            {/* Two-Factor Authentication */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div>
+                <h3 className="text-gray-900 dark:text-gray-100 font-medium">
+                  Two-Factor Authentication
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                  Add an extra layer of security to your account
+                </p>
+              </div>
+              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                Enable
+              </button>
+            </div>
+
+            {/* Delete Account */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div>
+                <h3 className="text-gray-900 dark:text-gray-100 font-medium">
+                  Delete Account
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                  Permanently remove your account and data
+                </p>
+              </div>
+              <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -307,30 +357,30 @@ function BidCard({ bid, status }) {
               <ArrowUpRight className="h-4 w-4 text-primary hover:text-primary/80" />
             </Link>
           </div>
-
+          
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-gray-400">Your Bid:</span>
+              <span className="text-gray-600 dark:text-gray-400">Your Bid:</span>
               <p className="font-medium text-primary">£{Number(bid.bid_amount).toFixed(2)}</p>
             </div>
             <div>
-              <span className="text-gray-400">Current Price:</span>
-              <p className="font-medium text-emerald-400">£{Number(bid.current_bid).toFixed(2)}</p>
+              <span className="text-gray-600 dark:text-gray-400">Current Price:</span>
+              <p className="font-medium text-emerald-600 dark:text-emerald-400">£{Number(bid.current_bid).toFixed(2)}</p>
             </div>
             <div>
-              <span className="text-gray-400">Bid Date:</span>
-              <p className="text-gray-300">{new Date(bid.created_at).toLocaleDateString()}</p>
+              <span className="text-gray-600 dark:text-gray-400">Bid Date:</span>
+              <p className="text-gray-700 dark:text-gray-300">{new Date(bid.created_at).toLocaleDateString()}</p>
             </div>
             <div>
-              {status === "ongoing" ? (
+              {status === 'ongoing' ? (
                 <>
                   <span className="text-gray-600 dark:text-gray-400">Time Left:</span>
                   <p className="text-gray-700 dark:text-gray-300">{daysLeft} days</p>
                 </>
               ) : (
                 <>
-                  <span className="text-gray-400">End Date:</span>
-                  <p className="text-gray-300">{endTime.toLocaleDateString()}</p>
+                  <span className="text-gray-600 dark:text-gray-400">End Date:</span>
+                  <p className="text-gray-700 dark:text-gray-300">{endTime.toLocaleDateString()}</p>
                 </>
               )}
             </div>
@@ -338,7 +388,7 @@ function BidCard({ bid, status }) {
         </div>
 
         {/* Status Indicator */}
-        <div className="flex flex-col items-center justify-center px-4 border-l border-gray-700">
+        <div className="flex flex-col items-center justify-center px-4 border-l border-gray-200 dark:border-gray-700">
           {status === 'ongoing' ? (
             isWinning ? (
               <div className="text-center">
