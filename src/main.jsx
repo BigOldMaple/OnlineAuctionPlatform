@@ -17,8 +17,6 @@ const store = configureStore({
 const AUTH0_DOMAIN = import.meta.env.VITE_AUTH0_DOMAIN;
 const AUTH0_CLIENT_ID = import.meta.env.VITE_AUTH0_CLIENT_ID;
 
-console.log(AUTH0_CLIENT_ID);
-
 ReactDOM.createRoot(document.getElementById("root")).render(
   <>
     <Auth0Provider

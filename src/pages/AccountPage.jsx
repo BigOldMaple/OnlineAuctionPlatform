@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Link } from "react-router-dom";
-import { 
-  Loader2, 
+import {
+  Loader2,
   Clock,
   CheckCircle2,
   XCircle,
   ArrowUpRight,
-  ClockIcon
+  ClockIcon,
 } from "lucide-react";
 
 function AccountPage() {
@@ -16,68 +16,76 @@ function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-// Update the useEffect in AccountPage where we process the bids
-useEffect(() => {
-  async function fetchBids() {
-    if (!isAuthenticated || !user?.sub) return;
+  // Update the useEffect in AccountPage where we process the bids
+  useEffect(() => {
+    async function fetchBids() {
+      if (!isAuthenticated || !user?.sub) return;
 
-    try {
-      setLoading(true);
-      setError(null);
+      try {
+        setLoading(true);
+        setError(null);
 
-      // First get the user's database ID
-      const userResponse = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/users/auth0/${user.sub}`
-      );
-      
-      if (!userResponse.ok) {
-        throw new Error('Failed to fetch user data');
-      }
+        // First get the user's database ID
+        const userResponse = await fetch(
+          `${
+            import.meta.env.VITE_API_URL || "http://localhost:5005"
+          }/api/users/auth0/${user.sub}`
+        );
 
-      const userData = await userResponse.json();
-      const userId = userData.data?.id;
-
-      if (!userId) {
-        throw new Error('User ID not found');
-      }
-
-      // Then fetch the user's bids
-      const bidsResponse = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/bids/user/${userId}`
-      );
-
-      if (!bidsResponse.ok) {
-        throw new Error('Failed to fetch bids');
-      }
-
-      const bidsData = await bidsResponse.json();
-      
-      // Separate bids into ongoing and past
-      const ongoing = [];
-      const past = [];
-
-      bidsData.data?.forEach(bid => {
-        if (bid.status === 'ongoing') {
-          ongoing.push(bid);
-        } else {
-          past.push(bid);
+        if (!userResponse.ok) {
+          throw new Error("Failed to fetch user data");
         }
-      });
 
-      setBids({
-        ongoing: ongoing.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
-        past: past.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-      });
-    } catch (err) {
-      console.error('Error fetching bids:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
+        const userData = await userResponse.json();
+        const userId = userData.data?.id;
+
+        if (!userId) {
+          throw new Error("User ID not found");
+        }
+
+        // Then fetch the user's bids
+        const bidsResponse = await fetch(
+          `${
+            import.meta.env.VITE_API_URL || "http://localhost:5005"
+          }/api/bids/user/${userId}`
+        );
+
+        if (!bidsResponse.ok) {
+          throw new Error("Failed to fetch bids");
+        }
+
+        const bidsData = await bidsResponse.json();
+
+        // Separate bids into ongoing and past
+        const ongoing = [];
+        const past = [];
+
+        bidsData.data?.forEach((bid) => {
+          if (bid.status === "ongoing") {
+            ongoing.push(bid);
+          } else {
+            past.push(bid);
+          }
+        });
+
+        setBids({
+          ongoing: ongoing.sort(
+            (a, b) => new Date(b.created_at) - new Date(a.created_at)
+          ),
+          past: past.sort(
+            (a, b) => new Date(b.created_at) - new Date(a.created_at)
+          ),
+        });
+      } catch (err) {
+        console.error("Error fetching bids:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     }
-  }
 
-  fetchBids();
-}, [isAuthenticated, user]);
+    fetchBids();
+  }, [isAuthenticated, user]);
 
   if (isLoading) {
     return (
@@ -95,7 +103,8 @@ useEffect(() => {
             Please log in to view your account
           </h2>
           <p className="text-gray-300 mb-4">
-            You need to be logged in to view your account details and bid history.
+            You need to be logged in to view your account details and bid
+            history.
           </p>
           <button
             onClick={() => loginWithRedirect()}
@@ -151,11 +160,7 @@ useEffect(() => {
         {bids.ongoing.length > 0 ? (
           <div className="grid gap-4">
             {bids.ongoing.map((bid) => (
-              <BidCard
-                key={bid.id}
-                bid={bid}
-                status="ongoing"
-              />
+              <BidCard key={bid.id} bid={bid} status="ongoing" />
             ))}
           </div>
         ) : (
@@ -174,11 +179,7 @@ useEffect(() => {
         {bids.past.length > 0 ? (
           <div className="grid gap-4">
             {bids.past.map((bid) => (
-              <BidCard
-                key={bid.id}
-                bid={bid}
-                status="past"
-              />
+              <BidCard key={bid.id} bid={bid} status="past" />
             ))}
           </div>
         ) : (
@@ -211,22 +212,28 @@ function BidCard({ bid, status }) {
               <ArrowUpRight className="h-4 w-4 text-primary hover:text-primary/80" />
             </Link>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-gray-400">Your Bid:</span>
-              <p className="font-medium text-primary">£{Number(bid.bid_amount).toFixed(2)}</p>
+              <p className="font-medium text-primary">
+                £{Number(bid.bid_amount).toFixed(2)}
+              </p>
             </div>
             <div>
               <span className="text-gray-400">Current Price:</span>
-              <p className="font-medium text-emerald-400">£{Number(bid.current_bid).toFixed(2)}</p>
+              <p className="font-medium text-emerald-400">
+                £{Number(bid.current_bid).toFixed(2)}
+              </p>
             </div>
             <div>
               <span className="text-gray-400">Bid Date:</span>
-              <p className="text-gray-300">{new Date(bid.created_at).toLocaleDateString()}</p>
+              <p className="text-gray-300">
+                {new Date(bid.created_at).toLocaleDateString()}
+              </p>
             </div>
             <div>
-              {status === 'ongoing' ? (
+              {status === "ongoing" ? (
                 <>
                   <span className="text-gray-400">Time Left:</span>
                   <p className="text-gray-300">{daysLeft} days</p>
@@ -234,7 +241,9 @@ function BidCard({ bid, status }) {
               ) : (
                 <>
                   <span className="text-gray-400">End Date:</span>
-                  <p className="text-gray-300">{endTime.toLocaleDateString()}</p>
+                  <p className="text-gray-300">
+                    {endTime.toLocaleDateString()}
+                  </p>
                 </>
               )}
             </div>
@@ -243,7 +252,7 @@ function BidCard({ bid, status }) {
 
         {/* Status Indicator */}
         <div className="flex flex-col items-center justify-center px-4 border-l border-gray-700">
-          {status === 'ongoing' ? (
+          {status === "ongoing" ? (
             isWinning ? (
               <div className="text-center">
                 <CheckCircle2 className="h-6 w-6 text-emerald-400 mx-auto mb-1" />
