@@ -1,24 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth0 } from "@auth0/auth0-react"; // Add Auth0
 import { 
   X, 
   AlertCircle, 
-  DollarSign, 
-  Edit2, 
   CheckCircle,
   ArrowLeft,
   Loader2,
   PoundSterling
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
+import { toast } from "react-toastify"; // Add toast
 
-function BidModal({ currentPrice, onClose, onSubmit }) {
+function BidModal({ currentPrice, itemId, onClose }) {
   const [bidAmount, setBidAmount] = useState("");
   const [reviewMode, setReviewMode] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const minimumBid = parseFloat((currentPrice + 0.01).toFixed(2));
   const { isDarkMode } = useTheme();
+  const { user, isAuthenticated } = useAuth0(); // Add Auth0 hooks
 
   // Focus trap
   useEffect(() => {
@@ -38,6 +39,11 @@ function BidModal({ currentPrice, onClose, onSubmit }) {
   };
 
   const handleReview = () => {
+    if (!isAuthenticated) {
+      setErrorMessage("Please log in to place a bid");
+      return;
+    }
+
     const bidValue = parseFloat(parseFloat(bidAmount).toFixed(2));
     
     if (!bidAmount) {
@@ -56,14 +62,59 @@ function BidModal({ currentPrice, onClose, onSubmit }) {
   const handleConfirmBid = async () => {
     try {
       setIsSubmitting(true);
-      await onSubmit(bidAmount);
-      // Show success message before closing
-      setTimeout(() => {
-        onClose();
-      }, 1000);
+      
+      // Get user's Auth0 ID
+      const auth0Id = user?.sub;
+      if (!auth0Id) {
+        throw new Error("You must be logged in to place a bid");
+      }
+  
+      console.log('Attempting to fetch user data for auth0Id:', auth0Id);
+      // First get the user's database ID using their Auth0 ID
+      const userResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/users/auth0/${auth0Id}`);
+      const userResponseData = await userResponse.json();
+      console.log('User response:', userResponseData);
+  
+      if (!userResponse.ok) {
+        throw new Error(`Failed to fetch user information: ${userResponseData.message || 'Unknown error'}`);
+      }
+  
+      const userId = userResponseData.data?.id;
+      if (!userId) {
+        throw new Error('Could not determine user ID');
+      }
+  
+      console.log('Attempting to place bid with data:', {
+        auction_id: itemId,
+        user_id: userId,
+        bid_amount: parseFloat(bidAmount)
+      });
+  
+      // Submit the bid
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/bids`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          auction_id: itemId,
+          user_id: userId,
+          bid_amount: parseFloat(bidAmount)
+        }),
+      });
+  
+      const responseData = await response.json();
+      console.log('Bid response:', responseData);
+  
+      if (!response.ok) {
+        throw new Error(responseData.message || responseData.error || 'Failed to place bid');
+      }
+  
+      toast.success(`Bid of £${parseFloat(bidAmount).toFixed(2)} placed successfully!`);
+      onClose();
     } catch (error) {
-      setErrorMessage("Failed to place bid. Please try again.");
-    } finally {
+      console.error('Detailed error placing bid:', error);
+      setErrorMessage(error.message || 'Failed to place bid');
       setIsSubmitting(false);
     }
   };

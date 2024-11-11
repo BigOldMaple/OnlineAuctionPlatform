@@ -1,83 +1,195 @@
+// db/controllers/itemsController.js
 import {
   getAllItems,
   getItemById,
   addItem,
-  updateItemById,
-  deleteItemById,
+  updateItem,
+  deleteItem,
+  syncItem as syncItemModel
 } from "../models/itemsModel.js";
 
-// Get all items
-async function getItems(req, res) {
+/**
+ * Get all items
+ */
+export const getItems = async (req, res) => {
   try {
     const items = await getAllItems();
-    return res.status(200).json(items);
+    return res.status(200).json({
+      success: true,
+      data: items
+    });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Failed to retrieve items" });
+    console.error("Error in getItems:", error);
+    return res.status(500).json({
+      error: 'Failed to retrieve items',
+      message: error.message
+    });
   }
-}
+};
 
-// Get an item by ID
-async function getItem(req, res) {
+/**
+ * Get a single item by ID
+ */
+export const getItem = async (req, res) => {
   try {
     const { id } = req.params;
     const item = await getItemById(id);
-    if (item) {
-      return res.status(200).json(item);
+    
+    if (!item) {
+      return res.status(404).json({
+        error: 'Item not found',
+        message: `No item found with ID ${id}`
+      });
     }
-    return res.status(404).json({ message: "Item not found" });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Failed to retrieve item" });
-  }
-}
 
-// Add a new item
-async function createItem(req, res) {
+    return res.status(200).json({
+      success: true,
+      data: item
+    });
+  } catch (error) {
+    console.error("Error in getItem:", error);
+    return res.status(500).json({
+      error: 'Failed to retrieve item',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Create a new item
+ */
+export const createItem = async (req, res) => {
   try {
-    const newItem = {
-      name: req.body.name,
-      description: req.body.description,
-      starting_price: req.body.starting_price,
-      image_url: req.body.image_url,
+    const itemData = req.body;
+
+    // Validate required fields
+    if (!itemData.name || !itemData.starting_price) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        required: ['name', 'starting_price'],
+        received: Object.keys(itemData)
+      });
+    }
+
+    const newItem = await addItem(itemData);
+    return res.status(201).json({
+      success: true,
+      data: newItem,
+      message: 'Item created successfully'
+    });
+  } catch (error) {
+    console.error("Error in createItem:", error);
+    return res.status(500).json({
+      error: 'Failed to create item',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Update an existing item
+ */
+export const updateItemById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const itemData = req.body;
+
+    const updatedItem = await updateItem(id, itemData);
+    
+    if (!updatedItem) {
+      return res.status(404).json({
+        error: 'Item not found',
+        message: `No item found with ID ${id}`
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: updatedItem,
+      message: 'Item updated successfully'
+    });
+  } catch (error) {
+    console.error("Error in updateItemById:", error);
+    return res.status(500).json({
+      error: 'Failed to update item',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Delete an item
+ */
+export const deleteItemById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await deleteItem(id);
+    
+    if (!deleted) {
+      return res.status(404).json({
+        error: 'Item not found',
+        message: `No item found with ID ${id}`
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Item deleted successfully'
+    });
+  } catch (error) {
+    console.error("Error in deleteItemById:", error);
+    return res.status(500).json({
+      error: 'Failed to delete item',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Sync item from external API
+ */
+export const syncItem = async (req, res) => {
+  try {
+    const itemData = req.body;
+    
+    // Validate required fields
+    if (!itemData.id || !itemData.title || !itemData.price) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        required: ['id', 'title', 'price'],
+        received: Object.keys(itemData)
+      });
+    }
+
+    // Transform API data to match our schema
+    const transformedData = {
+      id: itemData.id,
+      name: itemData.title,
+      description: itemData.description,
+      starting_price: itemData.price,
+      image_url: itemData.image
     };
-    const result = await addItem(newItem);
-    return res.status(201).json(result);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Failed to add item" });
-  }
-}
 
-// Update an item by ID
-async function updateItem(req, res) {
-  try {
-    const { id } = req.params;
-    const updatedItem = req.body;
-    const result = await updateItemById(id, updatedItem);
-    if (result) {
-      return res.status(200).json({ message: "Item updated successfully" });
-    }
-    return res.status(404).json({ message: "Item not found" });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Failed to update item" });
-  }
-}
+    await syncItemModel(transformedData);
 
-// Delete an item by ID
-async function removeItem(req, res) {
-  try {
-    const { id } = req.params;
-    const deleted = await deleteItemById(id);
-    if (deleted) {
-      return res.status(200).json({ message: "Item deleted" });
-    }
-    return res.status(404).json({ message: "Item not found" });
+    return res.status(200).json({
+      success: true,
+      message: 'Item synced successfully'
+    });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Failed to delete item" });
+    console.error("Error in syncItem:", error);
+    return res.status(500).json({
+      error: 'Failed to sync item',
+      message: error.message
+    });
   }
-}
+};
 
-export { getItems, getItem, createItem, updateItem, removeItem };
+// Export all controllers
+export {
+  getItems,
+  getItem,
+  createItem,
+  updateItemById as updateItem,
+  deleteItemById as deleteItem
+};
