@@ -4,7 +4,7 @@ import HeroSection from "../components/HeroSection";
 import CategoryLinks from "../components/CategoryLinks";
 import HorizontalScrollSection from "../components/HorizontalScrollSection";
 import AuctionCard from "../components/AuctionCard";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 
 const AUCTIONS_PER_SECTION = 5;
 const SECTION_CONFIGS = [
@@ -55,13 +55,15 @@ function AuctionListPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors">
         <div className="text-center">
-          <Loader2 
-            className="h-12 w-12 animate-spin mx-auto mb-4 text-gray-600 dark:text-gray-300" 
-            aria-hidden="true" 
+          <Loader2
+            className="h-12 w-12 animate-spin mx-auto mb-4 text-primary"
+            aria-hidden="true"
           />
-          <p className="text-lg font-medium text-gray-700 dark:text-gray-200" role="status">
+          <p className="text-lg font-medium text-gray-700 dark:text-gray-200 transition-colors" 
+             role="status"
+          >
             Loading auctions...
           </p>
         </div>
@@ -71,10 +73,13 @@ function AuctionListPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center p-4">
-          <p className="text-lg font-medium text-red-600 dark:text-red-400 mb-4">{error}</p>
-          <button 
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors">
+        <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-all max-w-md mx-4">
+          <AlertCircle className="h-12 w-12 text-red-500 dark:text-red-400 mx-auto mb-4" />
+          <p className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 transition-colors">
+            {error}
+          </p>
+          <button
             onClick={loadAuctions}
             className="btn btn-primary"
           >

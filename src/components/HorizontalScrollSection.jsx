@@ -15,7 +15,7 @@
  * - Horizontal scrolling with smooth transitions and button controls.
  */
 import React, { useRef } from "react";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 function HorizontalScrollSection({ title, items, renderCard }) {
   const scrollContainer = useRef(null);
@@ -30,29 +30,42 @@ function HorizontalScrollSection({ title, items, renderCard }) {
 
   return (
     <section className="max-w-screen-lg mx-auto">
-      <h2 className="text-3xl font-bold text-gray-100 mb-6 text-center">{title}</h2>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center transition-colors">
+        {title}
+      </h2>
       <div className="relative">
         <button
           onClick={scrollLeft}
-          className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 p-2 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700"
+          className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 p-3 
+            bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 
+            rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700
+            border border-gray-200 dark:border-gray-700
+            transition-all duration-200"
+          aria-label="Scroll left"
         >
-          <FaChevronLeft size={20} />
+          <ChevronLeft className="h-5 w-5" />
         </button>
         <div
           ref={scrollContainer}
-          className="flex overflow-x-auto space-x-4 scrollbar-hide p-4"
+          className="flex overflow-x-auto gap-4 scrollbar-hide 
+            py-4 px-2 scroll-smooth"
         >
           {items.map((item) => (
-            <div key={item.id} className="flex-shrink-0 w-72">
+            <div key={item.id} className="flex-shrink-0">
               {renderCard(item)}
             </div>
           ))}
         </div>
         <button
           onClick={scrollRight}
-          className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 p-2 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700"
+          className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 p-3
+            bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200
+            rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700
+            border border-gray-200 dark:border-gray-700
+            transition-all duration-200"
+          aria-label="Scroll right"
         >
-          <FaChevronRight size={20} />
+          <ChevronRight className="h-5 w-5" />
         </button>
       </div>
     </section>
