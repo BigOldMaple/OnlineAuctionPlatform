@@ -1,3 +1,4 @@
+// knexfile.mjs
 import dotenv from "dotenv";
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -27,10 +28,10 @@ const config = {
     },
     migrations: {
       tableName: "knex_migrations",
-      directory: "./db/db/migrations",
+      directory: path.join(__dirname, 'db', 'db', 'migrations'), // Absolute path for migrations
     },
     seeds: {
-      directory: "./db/db/seeds",
+      directory: path.join(__dirname, 'db', 'db', 'seeds'), // Absolute path for seeds
     },
     debug: true
   },
@@ -49,7 +50,7 @@ const config = {
     },
     migrations: {
       tableName: "knex_migrations",
-      directory: "./db/migrations",
+      directory: path.join(__dirname, 'db', 'migrations'),
     },
   },
 };

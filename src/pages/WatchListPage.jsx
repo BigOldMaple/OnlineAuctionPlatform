@@ -8,36 +8,78 @@ import {
   Package, 
   Clock,
   ExternalLink,
-  Hammer
+  Heart
 } from "lucide-react";
 
-const BiddedItemsPage = () => {
+const WatchListPage = () => {
   const { user, isAuthenticated, isLoading } = useAuth0();
-  const [biddedItems, setBiddedItems] = useState([]);
+  const [watchedItems, setWatchedItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (isAuthenticated && user) {
-      const fetchBiddedItems = async () => {
+    if (isAuthenticated && user?.sub) {
+      const fetchWatchedItems = async () => {
         try {
           setLoading(true);
-          const response = await fetch(`/api/bids/${user.sub}`);
-          const data = await response.json();
-          if (response.ok && data.length) {
-            setBiddedItems(data);
-          } else {
-            setBiddedItems([]);
+          
+          // First get user's database ID
+          const userResponse = await fetch(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/users/auth0/${user.sub}`
+          );
+          
+          if (!userResponse.ok) {
+            throw new Error('Failed to fetch user data');
           }
+
+          const userData = await userResponse.json();
+          const userId = userData.data?.id;
+
+          // Then fetch watched items
+          const watchlistResponse = await fetch(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/watchlist/${userId}`
+          );
+          
+          if (!watchlistResponse.ok) {
+            throw new Error('Failed to fetch watchlist');
+          }
+
+          const data = await watchlistResponse.json();
+          setWatchedItems(data.data || []);
         } catch (err) {
-          setError("Failed to load bidded items");
+          console.error('Error fetching watchlist:', err);
+          setError("Failed to load watched items");
         } finally {
           setLoading(false);
         }
       };
-      fetchBiddedItems();
+
+      fetchWatchedItems();
     }
   }, [isAuthenticated, user]);
+
+  const removeFromWatchlist = async (itemId) => {
+    try {
+      const userResponse = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/users/auth0/${user.sub}`
+      );
+      const userData = await userResponse.json();
+      const userId = userData.data?.id;
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/watchlist/${userId}/${itemId}`,
+        {
+          method: 'DELETE'
+        }
+      );
+
+      if (response.ok) {
+        setWatchedItems(current => current.filter(item => item.id !== itemId));
+      }
+    } catch (error) {
+      console.error('Error removing from watchlist:', error);
+    }
+  };
 
   // Auth loading state
   if (isLoading) {
@@ -63,7 +105,7 @@ const BiddedItemsPage = () => {
             Authentication Required
           </h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            Please log in to view your bidded items and track your auction activity.
+            Please log in to view your watchlist and track your favorite auctions.
           </p>
           <button 
             onClick={() => window.location.href = "/login"}
@@ -83,7 +125,7 @@ const BiddedItemsPage = () => {
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-300">
-            Loading your bidded items...
+            Loading your watchlist...
           </p>
         </div>
       </div>
@@ -97,7 +139,7 @@ const BiddedItemsPage = () => {
         <div className="text-center max-w-md mx-auto p-6 bg-base-200 rounded-xl shadow-lg">
           <AlertCircle className="h-12 w-12 text-error mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
-            Error Loading Items
+            Error Loading Watchlist
           </h2>
           <p className="text-gray-600 dark:text-gray-300">
             {error}
@@ -108,16 +150,16 @@ const BiddedItemsPage = () => {
   }
 
   // Empty state
-  if (biddedItems.length === 0) {
+  if (watchedItems.length === 0) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6 bg-base-200 rounded-xl shadow-lg">
-          <Package className="h-12 w-12 text-primary mx-auto mb-4" />
+          <Heart className="h-12 w-12 text-primary mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
-            No Bidded Items Yet
+            Your Watchlist is Empty
           </h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            Start exploring auctions and place your first bid!
+            Start adding items to your watchlist to keep track of your favorite auctions!
           </p>
           <Link to="/auctions" className="btn btn-primary">
             Browse Auctions
@@ -134,7 +176,7 @@ const BiddedItemsPage = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
-            Your Bidded Items
+            Your Watchlist
           </h1>
           <Link to="/auctions" className="btn btn-outline btn-sm">
             Browse More
@@ -143,7 +185,7 @@ const BiddedItemsPage = () => {
 
         {/* Items List */}
         <div className="space-y-4">
-          {biddedItems.map((item) => (
+          {watchedItems.map((item) => (
             <div 
               key={item.id}
               className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 transition-all duration-200
@@ -153,9 +195,9 @@ const BiddedItemsPage = () => {
                 <div className="flex items-center space-x-4">
                   {/* Item Image */}
                   <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center justify-center">
-                    {item.image ? (
+                    {item.image_url ? (
                       <img 
-                        src={item.image} 
+                        src={item.image_url} 
                         alt={item.name}
                         className="w-full h-full object-cover rounded-md"
                       />
@@ -171,24 +213,34 @@ const BiddedItemsPage = () => {
                     </h3>
                     <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-300">
                       <span className="flex items-center">
-                        <Hammer className="h-4 w-4 mr-1" />
-                        Your Bid: £{item.bidAmount}
+                        <Clock className="h-4 w-4 mr-1" />
+                        Current Bid: £{Number(item.current_bid).toFixed(2)}
                       </span>
                       <span className="flex items-center">
                         <Clock className="h-4 w-4 mr-1" />
-                        {item.bidDate}
+                        Ends: {new Date(item.end_time).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* View Details Link */}
-                <Link 
-                  to={`/auction/${item.id}`}
-                  className="btn btn-ghost btn-sm"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                </Link>
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => removeFromWatchlist(item.id)}
+                    className="btn btn-ghost btn-sm"
+                    title="Remove from watchlist"
+                  >
+                    <Heart className="h-4 w-4 fill-current text-red-500" />
+                  </button>
+                  <Link 
+                    to={`/auction/${item.item_id}`}
+                    className="btn btn-ghost btn-sm"
+                    title="View auction"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </Link>
+                </div>
               </div>
             </div>
           ))}
@@ -198,4 +250,4 @@ const BiddedItemsPage = () => {
   );
 };
 
-export default BiddedItemsPage;
+export default WatchListPage;

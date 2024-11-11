@@ -3,7 +3,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { fetchAuctions } from "../services/api";
 import BidModal from "../components/BidModal";
 import { useTheme } from "../contexts/ThemeContext";
-import { ArrowLeft, Star, Clock } from "lucide-react";
+import { useAuth0 } from "@auth0/auth0-react";
+import { 
+  ArrowLeft, 
+  Star, 
+  Clock, 
+  Heart,
+  Loader2 
+} from "lucide-react";
 import { toast } from "react-toastify";
 
 function AuctionDetailsPage() {
@@ -14,6 +21,24 @@ function AuctionDetailsPage() {
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const { isDarkMode } = useTheme();
+  const { user, isAuthenticated } = useAuth0();
+  const [isWatched, setIsWatched] = useState(false);
+  const [watchlistLoading, setWatchlistLoading] = useState(false);
+
+  // Function to check if item is in watchlist
+  const checkWatchlistStatus = async (userId, itemId) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/watchlist/${userId}/${itemId}/check`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setIsWatched(data.isWatched);
+      }
+    } catch (error) {
+      console.error('Error checking watchlist status:', error);
+    }
+  };
 
   useEffect(() => {
     async function loadAuctionItem() {
@@ -84,6 +109,17 @@ function AuctionDetailsPage() {
         if (auctionData && auctionData.data) {
           setAuction(auctionData.data);
         }
+
+        // Check watchlist status if user is authenticated
+        if (isAuthenticated && user?.sub) {
+          const userResponse = await fetch(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/users/auth0/${user.sub}`
+          );
+          const userData = await userResponse.json();
+          if (userData.data?.id) {
+            await checkWatchlistStatus(userData.data.id, id);
+          }
+        }
       } catch (error) {
         console.error("Failed to load auction item:", error);
         toast.error(error.message);
@@ -93,7 +129,47 @@ function AuctionDetailsPage() {
     }
     
     loadAuctionItem();
-  }, [id]);
+  }, [id, isAuthenticated, user]);
+
+  const toggleWatchlist = async () => {
+    if (!isAuthenticated) {
+      toast.error('Please log in to add items to your watchlist');
+      return;
+    }
+
+    try {
+      setWatchlistLoading(true);
+
+      // Get user's database ID
+      const userResponse = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/users/auth0/${user.sub}`
+      );
+      const userData = await userResponse.json();
+      const userId = userData.data?.id;
+
+      if (!userId) {
+        throw new Error('User ID not found');
+      }
+
+      const method = isWatched ? 'DELETE' : 'POST';
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/watchlist/${userId}/${id}`,
+        { method }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to update watchlist');
+      }
+
+      setIsWatched(!isWatched);
+      toast.success(isWatched ? 'Removed from watchlist' : 'Added to watchlist');
+    } catch (error) {
+      console.error('Error updating watchlist:', error);
+      toast.error(error.message);
+    } finally {
+      setWatchlistLoading(false);
+    }
+  };
 
   const openBidModal = () => {
     if (auction) {
@@ -150,10 +226,28 @@ function AuctionDetailsPage() {
       </button>
 
       <div className="bg-base-200 rounded-lg p-6 shadow-lg">
-        {/* Title */}
-        <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-gray-800 dark:text-gray-100">
-          {item.title}
-        </h2>
+        {/* Title with Watchlist Button */}
+        <div className="flex justify-between items-start mb-6">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-gray-100">
+            {item.title}
+          </h2>
+          {isAuthenticated && (
+          <button
+            onClick={toggleWatchlist}
+            disabled={watchlistLoading || !isAuthenticated}
+            className={`btn btn-circle btn-ghost ${
+              isWatched ? 'text-red-500' : 'text-gray-400'
+            }`}
+            title={isAuthenticated ? (isWatched ? 'Remove from watchlist' : 'Add to watchlist') : 'Log in to add to watchlist'}
+          >
+            {watchlistLoading ? (
+              <Loader2 className="h-6 w-6 animate-spin" />
+            ) : (
+              <Heart className={`h-6 w-6 ${isWatched ? 'fill-current' : ''}`} />
+            )}
+          </button>
+        )}
+        </div>
 
         {/* Image */}
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-6 flex justify-center">
@@ -251,13 +345,15 @@ function AuctionDetailsPage() {
           </div>
         )}
 
-        {/* Bid Button */}
-        <button
-          onClick={openBidModal}
-          className="btn btn-primary btn-lg w-full sm:w-auto"
-        >
-          Place Bid
-        </button>
+        {/* Action Buttons */}
+        <div className="flex gap-4">
+          <button
+            onClick={openBidModal}
+            className="btn btn-primary btn-lg flex-1"
+          >
+            Place Bid
+          </button>
+        </div>
       </div>
 
       {/* Bid Modal */}

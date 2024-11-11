@@ -4,7 +4,6 @@ import { useAuth0 } from "@auth0/auth0-react";
 import {
   Home,
   LayoutGrid,
-  ShoppingBag,
   PackageSearch,
   LogOut,
   LogIn,
@@ -12,7 +11,8 @@ import {
   Menu,
   X,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Heart
 } from "lucide-react";
 import SearchBar from "./SearchBar";
 import { useTheme } from "../contexts/ThemeContext";
@@ -110,8 +110,8 @@ function Navbar() {
               
               {isAuthenticated && (
                 <>
-                  <NavLink to="/bids" icon={ShoppingBag} className="whitespace-nowrap">
-                    My Bids
+                  <NavLink to="/watchlist" icon={Heart} className="whitespace-nowrap">
+                    Watchlist
                   </NavLink>
                   <NavLink to="/account" icon={User} className="whitespace-nowrap">
                     Account
@@ -168,8 +168,8 @@ function Navbar() {
             
             {isAuthenticated && (
               <>
-                <NavLink to="/bids" icon={ShoppingBag} className="w-full">
-                  My Bids
+                <NavLink to="/watchlist" icon={Heart} className="w-full">
+                  Watchlist
                 </NavLink>
                 <NavLink to="/account" icon={User} className="w-full">
                   Account
