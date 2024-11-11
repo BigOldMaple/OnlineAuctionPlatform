@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, memo } from "react";
 import { fetchAuctions } from "../services/api";
 import HeroSection from "../components/HeroSection";
-import CategoryLinks from "../components/CategoryLinks";
 import HorizontalScrollSection from "../components/HorizontalScrollSection";
 import AuctionCard from "../components/AuctionCard";
 import { Loader2, AlertCircle } from "lucide-react";
