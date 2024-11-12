@@ -1,4 +1,9 @@
-// db/controllers/bidController.js
+// bidController.js
+// This file contains controller functions for managing bids in the auction platform.
+// These functions handle retrieving bids by user, retrieving bids by auction, 
+// creating new bids, deleting bids, and getting specific bid details. Each function
+// interacts with the bid model and handles HTTP responses.
+
 import { 
   getBidsByUser,
   getBidsForAuction,

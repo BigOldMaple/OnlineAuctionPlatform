@@ -1,4 +1,8 @@
-// db/controllers/userController.js
+// userController.js
+// This file contains controller functions for managing users in the auction platform.
+// The functions handle retrieving users, creating/updating users, deleting users, 
+// and synchronizing users with Auth0 authentication.
+
 import {
   getAllUsers,
   getUserById,

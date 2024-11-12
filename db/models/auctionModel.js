@@ -1,3 +1,8 @@
+// auctionModel.js
+// This module provides functions for managing auctions in the database. It includes methods for 
+// retrieving all auctions, fetching auctions by specific criteria (ID or item ID), creating new 
+// auctions, updating existing auctions, deleting auctions, and retrieving active (ongoing) auctions.
+
 import db from "../db/db.js";
 
 /**

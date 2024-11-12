@@ -1,4 +1,8 @@
-// db/models/bidModel.js
+// bidModel.js
+// This module provides functions for managing bids in the auction platform. It includes methods
+// to retrieve bids by user, auction, or bid ID, add new bids, delete bids, and get the highest bid
+// for an auction. The functions ensure transactional integrity and provide bid-related data for 
+// the auction process.
 import db from "../db/db.js";
 
 export const getBidsByUser = async (userId) => {

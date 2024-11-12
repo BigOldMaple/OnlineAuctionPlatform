@@ -1,4 +1,8 @@
-// db/routes/userRoutes.js
+// userRoutes.js
+// Defines routes for managing users in the auction platform. These routes handle user retrieval,
+// creation, deletion, and integration with Auth0 for authentication. Each route corresponds to 
+// a controller function in `userController.js`.
+
 import express from "express";
 import {
   getUsers,

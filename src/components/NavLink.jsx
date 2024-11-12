@@ -1,16 +1,20 @@
-// components/NavLink.js
+// NavLink.js
+// This component renders a navigation link button. It can be customized with a target path (`to`), 
+// an optional icon, and children elements. It highlights the active link and allows an optional 
+// callback (`onNavigate`) when navigating.
+
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const NavLink = ({ to, icon: Icon, children, className = '', closeMenu = true, onNavigate }) => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const location = useLocation(); // Get current route location
+  const navigate = useNavigate(); // Function to navigate to a different route
 
-  const isActivePath = (path) => location.pathname === path;
+  const isActivePath = (path) => location.pathname === path; // Check if the current path matches the target path
 
   const handleNavigate = () => {
-    if (onNavigate) onNavigate();
-    navigate(to);
+    if (onNavigate) onNavigate(); // If provided, call the onNavigate callback
+    navigate(to); // Navigate to the specified path
   };
 
   return (

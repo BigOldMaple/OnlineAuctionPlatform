@@ -1,3 +1,16 @@
+/**
+ * SearchBar Component
+ * 
+ * An accessible search component with autocomplete suggestions.
+ * Features:
+ * - Real-time suggestions
+ * - Keyboard navigation
+ * - Debounced API calls
+ * - Loading states
+ * - Accessibility support
+ * - Click outside handling
+ */
+
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -5,17 +18,19 @@ import debounce from "lodash.debounce";
 import { Search, Loader2, ArrowRight } from "lucide-react";
 
 function SearchBar() {
+  // State management
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [isSuggestionsVisible, setIsSuggestionsVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   
+  // Hooks
   const navigate = useNavigate();
   const searchRef = useRef(null);
   const suggestionsRef = useRef(null);
 
-  // Function to fetch suggestions based on the current query
+  // Fetch and filter suggestions
   const fetchSuggestions = async (query) => {
     setIsLoading(true);
     try {
@@ -34,20 +49,17 @@ function SearchBar() {
     }
   };
 
+  // Debounce API calls
   const debouncedFetchSuggestions = useCallback(
     debounce(fetchSuggestions, 300),
     []
   );
 
-  // Handle click outside to close suggestions
+  // Handle outside clicks
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(event.target) &&
-        suggestionsRef.current &&
-        !suggestionsRef.current.contains(event.target)
-      ) {
+      if (!searchRef.current?.contains(event.target) && 
+          !suggestionsRef.current?.contains(event.target)) {
         setIsSuggestionsVisible(false);
       }
     };
@@ -56,6 +68,7 @@ function SearchBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Event handlers
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
@@ -116,10 +129,8 @@ function SearchBar() {
 
   return (
     <div className="relative w-full max-w-md" ref={searchRef}>
-      <form 
-        onSubmit={handleSearchSubmit}
-        className="relative flex items-center"
-      >
+      {/* Search Input */}
+      <form onSubmit={handleSearchSubmit} className="relative flex items-center">
         <div className="relative w-full">
           <input
             type="text"
@@ -147,7 +158,7 @@ function SearchBar() {
         </div>
       </form>
 
-      {/* Suggestions Dropdown */}
+      {/* Suggestions List */}
       {isSuggestionsVisible && suggestions.length > 0 && (
         <div 
           ref={suggestionsRef}

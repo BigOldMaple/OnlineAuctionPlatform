@@ -1,3 +1,32 @@
+/**
+ * AccountPage Component
+ * 
+ * A comprehensive user account management page with tabbed interface for profile, bid history, and settings.
+ * 
+ * Features:
+ * - Profile information display
+ * - Bid history tracking (ongoing and past bids)
+ * - Account settings management
+ * - Dark/light mode support
+ * - Responsive design
+ * 
+ * Dependencies:
+ * - Auth0: User authentication and profile data
+ * - API Integration: User and bid data endpoints
+ * - BidCard: Sub-component for bid display
+ * 
+ * Data Flow:
+ * 1. Authenticates user through Auth0
+ * 2. Fetches user data from database
+ * 3. Retrieves bid history
+ * 4. Manages tab state for different sections
+ * 
+ * State Management:
+ * - Local state for tabs, loading, and errors
+ * - Auth0 context for user data
+ * - Bid history data with sorting
+ */
+
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Link } from "react-router-dom";
@@ -7,20 +36,20 @@ import {
   CheckCircle2,
   XCircle,
   ArrowUpRight,
-  ClockIcon,
-  Settings,
-  Bell,
-  Shield,
-  Trash2
+  ClockIcon
 } from "lucide-react";
 
 function AccountPage() {
+  // Auth0 hooks
   const { user, isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
+  
+  // Local state management
   const [bids, setBids] = useState({ ongoing: [], past: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('profile'); // 'profile', 'bids', 'settings'
+  const [activeTab, setActiveTab] = useState('profile');
 
+  // Fetch bid history data
   useEffect(() => {
     async function fetchBids() {
       if (!isAuthenticated || !user?.sub) return;
@@ -29,6 +58,7 @@ function AccountPage() {
         setLoading(true);
         setError(null);
 
+        // Phase 1: Get user's database ID
         const userResponse = await fetch(
           `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/users/auth0/${user.sub}`
         );
@@ -44,6 +74,7 @@ function AccountPage() {
           throw new Error('User ID not found');
         }
 
+        // Phase 2: Fetch user's bids
         const bidsResponse = await fetch(
           `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/bids/user/${userId}`
         );
@@ -54,6 +85,7 @@ function AccountPage() {
 
         const bidsData = await bidsResponse.json();
         
+        // Phase 3: Sort bids into ongoing and past
         const ongoing = [];
         const past = [];
 
@@ -65,6 +97,7 @@ function AccountPage() {
           }
         });
 
+        // Sort bids by date (newest first)
         setBids({
           ongoing: ongoing.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
           past: past.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -80,6 +113,7 @@ function AccountPage() {
     fetchBids();
   }, [isAuthenticated, user]);
 
+  // Authentication loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -88,6 +122,7 @@ function AccountPage() {
     );
   }
 
+  // Not authenticated state
   if (!isAuthenticated) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -337,8 +372,25 @@ function AccountPage() {
     </div>
   );
 }
-// BidCard Component
+/**
+ * BidCard Component
+ * 
+ * Displays individual bid information with status indicators and formatting.
+ * 
+ * Props:
+ * - bid: Bid data object
+ * - status: 'ongoing' | 'past'
+ * 
+ * Features:
+ * - Price formatting
+ * - Time remaining calculation
+ * - Status indicators (winning, outbid, ended)
+ * - Link to auction
+ * - Responsive layout
+ */
+
 function BidCard({ bid, status }) {
+  // Bid status calculations
   const isWinning = bid.is_highest_bidder;
   const endTime = new Date(bid.end_time);
   const now = new Date();
@@ -348,7 +400,9 @@ function BidCard({ bid, status }) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700 hover:border-primary transition-colors">
       <div className="flex justify-between gap-4">
+        {/* Bid information section */}
         <div className="flex-grow">
+          {/* Title and link */}
           <div className="flex items-center gap-2 mb-2">
             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 truncate">
               {bid.item_name}
@@ -358,19 +412,33 @@ function BidCard({ bid, status }) {
             </Link>
           </div>
           
+          {/* Bid details grid */}
           <div className="grid grid-cols-2 gap-4 text-sm">
+            {/* Bid amount */}
             <div>
               <span className="text-gray-600 dark:text-gray-400">Your Bid:</span>
-              <p className="font-medium text-primary">£{Number(bid.bid_amount).toFixed(2)}</p>
+              <p className="font-medium text-primary">
+                £{Number(bid.bid_amount).toFixed(2)}
+              </p>
             </div>
+            
+            {/* Current price */}
             <div>
               <span className="text-gray-600 dark:text-gray-400">Current Price:</span>
-              <p className="font-medium text-emerald-600 dark:text-emerald-400">£{Number(bid.current_bid).toFixed(2)}</p>
+              <p className="font-medium text-emerald-600 dark:text-emerald-400">
+                £{Number(bid.current_bid).toFixed(2)}
+              </p>
             </div>
+            
+            {/* Bid date */}
             <div>
               <span className="text-gray-600 dark:text-gray-400">Bid Date:</span>
-              <p className="text-gray-700 dark:text-gray-300">{new Date(bid.created_at).toLocaleDateString()}</p>
+              <p className="text-gray-700 dark:text-gray-300">
+                {new Date(bid.created_at).toLocaleDateString()}
+              </p>
             </div>
+            
+            {/* Time information */}
             <div>
               {status === 'ongoing' ? (
                 <>
@@ -380,14 +448,16 @@ function BidCard({ bid, status }) {
               ) : (
                 <>
                   <span className="text-gray-600 dark:text-gray-400">End Date:</span>
-                  <p className="text-gray-700 dark:text-gray-300">{endTime.toLocaleDateString()}</p>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    {endTime.toLocaleDateString()}
+                  </p>
                 </>
               )}
             </div>
           </div>
         </div>
 
-        {/* Status Indicator */}
+        {/* Status indicator section */}
         <div className="flex flex-col items-center justify-center px-4 border-l border-gray-200 dark:border-gray-700">
           {status === 'ongoing' ? (
             isWinning ? (

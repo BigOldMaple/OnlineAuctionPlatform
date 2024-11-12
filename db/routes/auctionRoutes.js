@@ -1,3 +1,8 @@
+// auctionRoutes.js
+// Defines routes for managing auctions in the auction platform. These routes allow for retrieving
+// all auctions, fetching an auction by its ID or associated item ID, creating new auctions, updating
+// existing auctions, and deleting auctions.
+
 import express from "express";
 import {
   getAuctions,

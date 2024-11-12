@@ -1,3 +1,9 @@
+// AuctionCard.jsx
+// This component renders an auction card displaying an item's image, title, description, current bid, 
+// starting price, category, and rating. It fetches auction data, syncs the item to the database if needed, 
+// and creates an auction if none exists for the item. The current price is displayed from the auction data
+// or falls back to the item price. The price is formatted as a number with 2 decimal places. The component
+
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";

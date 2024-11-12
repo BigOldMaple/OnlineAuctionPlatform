@@ -1,5 +1,7 @@
-// src/components/CategoryLinks.jsx
-
+// CategoryLinks.jsx
+// This component renders a list of category buttons. When a button is clicked, the user is 
+// navigated to the results page for the selected category. Each button has a hover effect 
+// and scaling animation to enhance the user experience.
 import React from "react";
 import { useNavigate } from "react-router-dom";
 

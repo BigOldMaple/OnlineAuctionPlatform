@@ -1,5 +1,11 @@
+// watchlistController.js
+// This module provides functions to manage a user's watchlist in the auction platform. 
+// It includes methods to retrieve the watchlist, add or remove items, and check if a 
+// specific item is being watched by the user.
+
 import db from "../db/db.js";
 
+// Function to get all items on a user's watchlist, including auction details if available
 export const getUserWatchlist = async (userId) => {
   try {
     console.log('Querying watchlist for user:', userId);
@@ -27,6 +33,7 @@ export const getUserWatchlist = async (userId) => {
   }
 };
 
+// Function to add an item to a user's watchlist
 export const addItemToWatchlist = async (userId, itemId) => {
   const trx = await db.transaction();
   try {
@@ -43,6 +50,7 @@ export const addItemToWatchlist = async (userId, itemId) => {
   }
 };
 
+// Function to remove an item from a user's watchlist
 export const removeItemFromWatchlist = async (userId, itemId) => {
   const trx = await db.transaction();
   try {
@@ -60,6 +68,7 @@ export const removeItemFromWatchlist = async (userId, itemId) => {
   }
 };
 
+// Function to check if a specific item is on the user's watchlist
 export const isItemWatched = async (userId, itemId) => {
   try {
     const result = await db('watchlist')

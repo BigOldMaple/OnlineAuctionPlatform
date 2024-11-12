@@ -1,3 +1,8 @@
+// watchlistRoutes.js
+// Defines routes for managing a user's watchlist in the auction platform. These routes allow 
+// fetching the user's watchlist, adding items to the watchlist, removing items, and checking 
+// if a specific item is on the watchlist.
+
 import express from "express";
 import {
   getWatchlist,

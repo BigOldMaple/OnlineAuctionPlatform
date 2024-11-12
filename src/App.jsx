@@ -1,18 +1,13 @@
-// src/App.jsx
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
-import { Slide } from "react-toastify"; // Add this import
+import { Slide } from "react-toastify";
 import { Provider } from "react-redux";
 import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 import store from "./store";
 import "react-toastify/dist/ReactToastify.css";
 import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
-
-// Import ErrorBoundary
 import ErrorBoundary from "./components/ErrorBoundary";
-
-// Components
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import AppRouter from "./Router";

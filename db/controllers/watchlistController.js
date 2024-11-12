@@ -1,3 +1,9 @@
+// watchlistController.js
+// This file contains controller functions for managing a user's watchlist in the auction platform.
+// The functions handle retrieving the watchlist, adding items, removing items, and checking if 
+// a specific item is on the watchlist. Each function interacts with the watchlist model and handles
+// HTTP responses.
+
 import {
     getUserWatchlist,
     addItemToWatchlist,

@@ -1,4 +1,8 @@
-// db/routes/itemsRoutes.js
+// itemsRoutes.js
+// Defines routes for managing items in the auction platform. These routes allow retrieving all items 
+// or a specific item, creating new items, updating or deleting an item by ID, and syncing item data 
+// with an external source.
+
 import express from "express";
 import {
   getItems,

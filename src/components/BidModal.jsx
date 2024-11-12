@@ -1,6 +1,11 @@
+// BidModal.jsx
+// This component provides a modal for placing a bid on an auction item. It includes fields to 
+// enter a bid amount, a review mode for confirming the bid, and error handling. It uses Auth0 for 
+// authentication, Framer Motion for animations, and React Toastify for success notifications.
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth0 } from "@auth0/auth0-react"; // Add Auth0
+import { useAuth0 } from "@auth0/auth0-react"; 
 import { 
   X, 
   AlertCircle, 
@@ -10,7 +15,7 @@ import {
   PoundSterling
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
-import { toast } from "react-toastify"; // Add toast
+import { toast } from "react-toastify";
 
 function BidModal({ currentPrice, itemId, onClose }) {
   const [bidAmount, setBidAmount] = useState("");
@@ -19,7 +24,7 @@ function BidModal({ currentPrice, itemId, onClose }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const minimumBid = parseFloat((currentPrice + 0.01).toFixed(2));
   const { isDarkMode } = useTheme();
-  const { user, isAuthenticated } = useAuth0(); // Add Auth0 hooks
+  const { user, isAuthenticated } = useAuth0();
 
   // Focus trap
   useEffect(() => {

@@ -1,4 +1,6 @@
-// db/app.js - Update to include watchlist routes
+// app.js
+// Main server file for setting up the Express server, middleware, and routes for an auction platform API.
+// This includes routes for users, items, auctions, bids, and watchlist management.
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -6,7 +8,7 @@ import UsersRouter from "./routes/userRoutes.js";
 import ItemsRouter from "./routes/itemsRoutes.js";
 import AuctionsRouter from "./routes/auctionRoutes.js";
 import BidsRouter from "./routes/bidRoutes.js";
-import WatchlistRouter from "./routes/watchlistRoutes.js"; // Add this import
+import WatchlistRouter from "./routes/watchlistRoutes.js";
 
 dotenv.config();
 
@@ -33,7 +35,7 @@ app.use("/api/users", UsersRouter);
 app.use("/api/items", ItemsRouter);
 app.use("/api/auctions", AuctionsRouter);
 app.use("/api/bids", BidsRouter);
-app.use("/api/watchlist", WatchlistRouter); // Add this line
+app.use("/api/watchlist", WatchlistRouter); 
 
 // Error handling middleware
 app.use((err, req, res, next) => {

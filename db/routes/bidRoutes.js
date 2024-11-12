@@ -1,4 +1,3 @@
-// db/routes/bidRoutes.js
 import express from "express";
 import { 
   getBidsByUserID, 

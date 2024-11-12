@@ -1,4 +1,9 @@
-// db/controllers/auctionController.js
+// auctionController.js
+// This file contains controller functions for managing auctions in the auction platform.
+// These functions handle retrieving all auctions, retrieving specific auctions by ID or item ID, 
+// creating new auctions, updating auctions, and deleting auctions. Each function interacts with 
+// the auction model and handles HTTP responses.
+
 import {
   getAllAuctions,
   getAuctionById as getAuctionByIdModel,

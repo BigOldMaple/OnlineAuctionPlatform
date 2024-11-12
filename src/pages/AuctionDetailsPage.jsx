@@ -1,3 +1,29 @@
+/**
+ * AuctionDetailsPage Component
+ * 
+ * This component displays detailed information about a specific auction item and handles bidding and watchlist functionality.
+ * 
+ * Features:
+ * - Displays comprehensive auction item details
+ * - Handles bidding through modal interface
+ * - Manages watchlist functionality (add/remove items)
+ * - Real-time price updates
+ * - Dark/light mode support
+ * 
+ * Dependencies:
+ * - BidModal: Handles bidding interface
+ * - Auth0: User authentication
+ * - ThemeContext: Dark/light mode management
+ * - API Integrations: Items, auctions, and watchlist endpoints
+ * 
+ * Data Flow:
+ * 1. Fetches item details from external API
+ * 2. Syncs item to local database
+ * 3. Creates or retrieves auction details
+ * 4. Manages watchlist status
+ * 5. Handles bid placements
+ */
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchAuctions } from "../services/api";
@@ -14,18 +40,23 @@ import {
 import { toast } from "react-toastify";
 
 function AuctionDetailsPage() {
+  // Route and navigation hooks
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // State management
   const [item, setItem] = useState(null);
   const [auction, setAuction] = useState(null);
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { isDarkMode } = useTheme();
-  const { user, isAuthenticated } = useAuth0();
   const [isWatched, setIsWatched] = useState(false);
   const [watchlistLoading, setWatchlistLoading] = useState(false);
 
-  // Function to check if item is in watchlist
+  // Context hooks
+  const { isDarkMode } = useTheme();
+  const { user, isAuthenticated } = useAuth0();
+
+  // Watchlist status check function
   const checkWatchlistStatus = async (userId, itemId) => {
     try {
       const response = await fetch(
@@ -40,11 +71,13 @@ function AuctionDetailsPage() {
     }
   };
 
+  // Main data loading effect
   useEffect(() => {
     async function loadAuctionItem() {
       try {
         setLoading(true);
-        // First fetch item from Fake Store API
+        
+        // Phase 1: Fetch item from external API
         const allItems = await fetchAuctions();
         const selectedItem = allItems.find((item) => item.id === parseInt(id));
         
@@ -53,14 +86,12 @@ function AuctionDetailsPage() {
         }
         setItem(selectedItem);
 
-        // First sync the item to our database
+        // Phase 2: Sync item to local database
         const syncResponse = await fetch(
           `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/items/sync`,
           {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(selectedItem),
           }
         );
@@ -69,7 +100,7 @@ function AuctionDetailsPage() {
           throw new Error('Failed to sync item data');
         }
 
-        // Then check if an auction exists for this item
+        // Phase 3: Create or retrieve auction
         const auctionResponse = await fetch(
           `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/auctions/item/${id}`
         );
@@ -77,14 +108,13 @@ function AuctionDetailsPage() {
         let auctionData;
         
         if (!auctionResponse.ok) {
+          // Create new auction if none exists
           console.log('Creating new auction for item:', selectedItem.id);
           const createResponse = await fetch(
             `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/auctions`,
             {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 item_id: selectedItem.id,
                 start_time: new Date().toISOString(),
@@ -100,17 +130,15 @@ function AuctionDetailsPage() {
           }
 
           auctionData = await createResponse.json();
-          console.log('Created new auction:', auctionData);
         } else {
           auctionData = await auctionResponse.json();
-          console.log('Found existing auction:', auctionData);
         }
 
         if (auctionData && auctionData.data) {
           setAuction(auctionData.data);
         }
 
-        // Check watchlist status if user is authenticated
+        // Phase 4: Check watchlist status for authenticated users
         if (isAuthenticated && user?.sub) {
           const userResponse = await fetch(
             `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/users/auth0/${user.sub}`
@@ -131,6 +159,7 @@ function AuctionDetailsPage() {
     loadAuctionItem();
   }, [id, isAuthenticated, user]);
 
+  // Watchlist toggle handler
   const toggleWatchlist = async () => {
     if (!isAuthenticated) {
       toast.error('Please log in to add items to your watchlist');
@@ -151,6 +180,7 @@ function AuctionDetailsPage() {
         throw new Error('User ID not found');
       }
 
+      // Toggle watchlist status
       const method = isWatched ? 'DELETE' : 'POST';
       const response = await fetch(
         `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/watchlist/${userId}/${id}`,
@@ -171,6 +201,7 @@ function AuctionDetailsPage() {
     }
   };
 
+  // Bid modal handlers
   const openBidModal = () => {
     if (auction) {
       setIsBidModalOpen(true);
@@ -181,6 +212,7 @@ function AuctionDetailsPage() {
     setIsBidModalOpen(false);
   };
 
+  // Bid success handler
   const handleBidSuccess = async (newBidAmount) => {
     try {
       const response = await fetch(
@@ -194,6 +226,7 @@ function AuctionDetailsPage() {
     }
   };
 
+  // Loading state
   if (loading || !item) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -204,11 +237,9 @@ function AuctionDetailsPage() {
     );
   }
 
-  // Ensure price values are numbers
+  // Data formatting
   const currentPrice = auction ? Number(auction.current_bid) || Number(item.price) : Number(item.price);
   const startingPrice = Number(item.price);
-
-  // Format dates
   const startTime = auction ? new Date(auction.start_time) : new Date();
   const endTime = auction ? new Date(auction.end_time) : new Date();
   const timeLeft = endTime - new Date();

@@ -1,8 +1,20 @@
+/**
+ * Theme Context and Provider
+ * 
+ * Manages application-wide dark/light theme.
+ * Features:
+ * - Theme persistence in localStorage
+ * - System theme preference detection
+ * - Theme toggle functionality
+ * - CSS class and data-attribute management
+ */
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
+  // Initialize theme state from storage or system preference
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window === 'undefined') return false;
     
@@ -13,6 +25,7 @@ export function ThemeProvider({ children }) {
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
+  // Apply theme changes to DOM
   useEffect(() => {
     const root = window.document.documentElement;
     if (isDarkMode) {
@@ -26,6 +39,7 @@ export function ThemeProvider({ children }) {
     }
   }, [isDarkMode]);
 
+  // Theme toggle handler
   const toggleDarkMode = () => {
     setIsDarkMode(prev => !prev);
   };
@@ -37,6 +51,10 @@ export function ThemeProvider({ children }) {
   );
 }
 
+/**
+ * Custom hook for accessing theme context
+ * @returns {Object} { isDarkMode, toggleDarkMode }
+ */
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (context === undefined) {

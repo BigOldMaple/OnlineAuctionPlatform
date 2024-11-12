@@ -1,3 +1,7 @@
+// Footer.js
+// This component renders the footer of the AuctionSite with sections for site branding, an about 
+// description, a theme toggle, and social media links. It uses a dark mode toggle via ThemeContext 
+// and includes FontAwesome icons for social media.
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFacebook, faTwitter, faInstagram } from "@fortawesome/free-brands-svg-icons";

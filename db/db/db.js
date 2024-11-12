@@ -1,4 +1,8 @@
-// db/db/db.js
+// db.js
+// This file sets up and configures the database connection using Knex and environment variables. 
+// It loads the configuration from a .env file, creates a connection to a PostgreSQL database, 
+// and tests the connection. If the connection fails, the process exits with an error.
+
 import knex from "knex";
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';

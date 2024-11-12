@@ -1,4 +1,7 @@
-// components/ErrorBoundary.jsx
+// ErrorBoundary.jsx
+// This component serves as an error boundary to catch JavaScript errors in its child components' 
+// render tree, log the errors, and display a fallback UI when an error occurs. It can be used
+// to prevent the entire application from crashing due to a single component error.
 import React from 'react';
 
 class ErrorBoundary extends React.Component {

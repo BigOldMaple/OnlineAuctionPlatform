@@ -1,3 +1,7 @@
+// Navbar.js
+// This component defines a responsive navigation bar for an auction site with links, a search bar, 
+// category dropdowns, authentication buttons, and mobile menu support. It also uses Auth0 for 
+// authentication, and provides navigation through React Router.
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";

@@ -1,4 +1,9 @@
-// db/controllers/itemsController.js
+// itemsController.js
+// This file contains controller functions for managing items in the auction platform.
+// These functions handle retrieving items, creating new items, updating items, deleting items,
+// and syncing item data with the database. Each function interacts with the item model and 
+// handles HTTP responses.
+
 import {
   getAllItems,
   getItemById,

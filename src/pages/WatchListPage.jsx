@@ -1,3 +1,35 @@
+/**
+ * WatchListPage Component
+ * 
+ * A user interface for viewing and managing watched auction items.
+ * 
+ * Features:
+ * - Display of watched items
+ * - Remove items from watchlist
+ * - Current bid tracking
+ * - End time display
+ * - Quick navigation to auctions
+ * - Multiple state handling
+ * - Dark/light mode support
+ * 
+ * Dependencies:
+ * - Auth0: User authentication
+ * - API Integration: Users and watchlist endpoints
+ * - Router: Navigation and linking
+ * - Lucide Icons: UI elements
+ * 
+ * Data Flow:
+ * 1. Authenticates user via Auth0
+ * 2. Fetches user's database ID
+ * 3. Retrieves watchlist items
+ * 4. Manages watchlist updates
+ * 
+ * State Management:
+ * - Authentication state from Auth0
+ * - Local loading and error states
+ * - Watchlist items state
+ */
+
 import React, { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Link } from "react-router-dom";
@@ -12,18 +44,22 @@ import {
 } from "lucide-react";
 
 const WatchListPage = () => {
+  // Auth0 hooks
   const { user, isAuthenticated, isLoading } = useAuth0();
+  
+  // Local state management
   const [watchedItems, setWatchedItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Fetch watchlist data
   useEffect(() => {
     if (isAuthenticated && user?.sub) {
       const fetchWatchedItems = async () => {
         try {
           setLoading(true);
           
-          // First get user's database ID
+          // Phase 1: Get user's database ID
           const userResponse = await fetch(
             `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/users/auth0/${user.sub}`
           );
@@ -35,7 +71,7 @@ const WatchListPage = () => {
           const userData = await userResponse.json();
           const userId = userData.data?.id;
 
-          // Then fetch watched items
+          // Phase 2: Fetch watchlist items
           const watchlistResponse = await fetch(
             `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/watchlist/${userId}`
           );
@@ -58,22 +94,27 @@ const WatchListPage = () => {
     }
   }, [isAuthenticated, user]);
 
+  /**
+   * Removes an item from the user's watchlist
+   * @param {string} itemId - ID of the item to remove
+   */
   const removeFromWatchlist = async (itemId) => {
     try {
+      // Get user's database ID
       const userResponse = await fetch(
         `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/users/auth0/${user.sub}`
       );
       const userData = await userResponse.json();
       const userId = userData.data?.id;
 
+      // Remove item from watchlist
       const response = await fetch(
         `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/watchlist/${userId}/${itemId}`,
-        {
-          method: 'DELETE'
-        }
+        { method: 'DELETE' }
       );
 
       if (response.ok) {
+        // Update local state to remove item
         setWatchedItems(current => current.filter(item => item.id !== itemId));
       }
     } catch (error) {
@@ -81,7 +122,9 @@ const WatchListPage = () => {
     }
   };
 
-  // Auth loading state
+  // Conditional Rendering States
+
+  // Authentication loading state
   if (isLoading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
@@ -118,7 +161,7 @@ const WatchListPage = () => {
     );
   }
 
-  // Loading state
+  // Data loading state
   if (loading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
@@ -141,15 +184,13 @@ const WatchListPage = () => {
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
             Error Loading Watchlist
           </h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            {error}
-          </p>
+          <p className="text-gray-600 dark:text-gray-300">{error}</p>
         </div>
       </div>
     );
   }
 
-  // Empty state
+  // Empty watchlist state
   if (watchedItems.length === 0) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
@@ -169,11 +210,11 @@ const WatchListPage = () => {
     );
   }
 
-  // Main content
+  // Main content with items
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
+        {/* Page Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
             Your Watchlist
@@ -183,7 +224,7 @@ const WatchListPage = () => {
           </Link>
         </div>
 
-        {/* Items List */}
+        {/* Watchlist Items */}
         <div className="space-y-4">
           {watchedItems.map((item) => (
             <div 
@@ -192,6 +233,7 @@ const WatchListPage = () => {
                 hover:shadow-lg border border-gray-200 dark:border-gray-700"
             >
               <div className="flex items-center justify-between">
+                {/* Item Information */}
                 <div className="flex items-center space-x-4">
                   {/* Item Image */}
                   <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center justify-center">
@@ -224,7 +266,7 @@ const WatchListPage = () => {
                   </div>
                 </div>
 
-                {/* Actions */}
+                {/* Action Buttons */}
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => removeFromWatchlist(item.id)}

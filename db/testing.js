@@ -1,4 +1,6 @@
-// db/test.js
+// test.js
+// This script is used to load environment variables from a .env file and verify their values. 
+// It also checks if the .env file exists in the expected location.
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import path from 'path';
