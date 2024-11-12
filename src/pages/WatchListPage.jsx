@@ -40,8 +40,10 @@ import {
   Package, 
   Clock,
   ExternalLink,
-  Heart
+  Heart,
+  StopCircle
 } from "lucide-react";
+import { toast } from "react-toastify";
 
 const WatchListPage = () => {
   // Auth0 hooks
@@ -51,6 +53,30 @@ const WatchListPage = () => {
   const [watchedItems, setWatchedItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Helper function to check if auction has ended
+  const isAuctionEnded = (endTime) => {
+    return new Date(endTime) <= new Date();
+  };
+
+  // Helper function to format remaining time or show ended status
+  const formatTimeStatus = (endTime) => {
+    const now = new Date();
+    const end = new Date(endTime);
+    const timeLeft = end - now;
+
+    if (timeLeft <= 0) {
+      return { status: 'ended', text: 'Auction Ended' };
+    }
+
+    const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    
+    return {
+      status: 'active',
+      text: days > 0 ? `${days}d ${hours}h remaining` : `${hours}h remaining`
+    };
+  };
 
   // Fetch watchlist data
   useEffect(() => {
@@ -85,6 +111,7 @@ const WatchListPage = () => {
         } catch (err) {
           console.error('Error fetching watchlist:', err);
           setError("Failed to load watched items");
+          toast.error("Failed to load your watchlist. Please try again later.");
         } finally {
           setLoading(false);
         }
@@ -116,13 +143,15 @@ const WatchListPage = () => {
       if (response.ok) {
         // Update local state to remove item
         setWatchedItems(current => current.filter(item => item.id !== itemId));
+        toast.success("Item removed from watchlist");
+      } else {
+        throw new Error('Failed to remove item from watchlist');
       }
     } catch (error) {
       console.error('Error removing from watchlist:', error);
+      toast.error("Failed to remove item from watchlist");
     }
   };
-
-  // Conditional Rendering States
 
   // Authentication loading state
   if (isLoading) {
@@ -185,6 +214,12 @@ const WatchListPage = () => {
             Error Loading Watchlist
           </h2>
           <p className="text-gray-600 dark:text-gray-300">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="btn btn-primary mt-4"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -226,66 +261,103 @@ const WatchListPage = () => {
 
         {/* Watchlist Items */}
         <div className="space-y-4">
-          {watchedItems.map((item) => (
-            <div 
-              key={item.id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 transition-all duration-200
-                hover:shadow-lg border border-gray-200 dark:border-gray-700"
-            >
-              <div className="flex items-center justify-between">
-                {/* Item Information */}
-                <div className="flex items-center space-x-4">
-                  {/* Item Image */}
-                  <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center justify-center">
-                    {item.image_url ? (
-                      <img 
-                        src={item.image_url} 
-                        alt={item.name}
-                        className="w-full h-full object-cover rounded-md"
-                      />
-                    ) : (
-                      <Package className="h-8 w-8 text-gray-400" />
-                    )}
-                  </div>
+          {watchedItems.map((item) => {
+            const timeStatus = formatTimeStatus(item.end_time);
+            const ended = timeStatus.status === 'ended';
+            
+            return (
+              <div 
+                key={item.id}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 transition-all duration-200
+                  hover:shadow-lg border border-gray-200 dark:border-gray-700
+                  relative"
+              >
+                {/* Auction Status Badge */}
+                <div
+                  className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium
+                    flex items-center gap-1
+                    ${ended 
+                      ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' 
+                      : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                    }`}
+                >
+                  {ended ? (
+                    <>
+                      <StopCircle className="h-3 w-3" />
+                      Ended
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="h-3 w-3" />
+                      {timeStatus.text}
+                    </>
+                  )}
+                </div>
 
-                  {/* Item Details */}
-                  <div>
-                    <h3 className="font-semibold text-gray-800 dark:text-gray-100">
-                      {item.name}
-                    </h3>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-300">
-                      <span className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        Current Bid: £{Number(item.current_bid).toFixed(2)}
-                      </span>
-                      <span className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        Ends: {new Date(item.end_time).toLocaleDateString()}
-                      </span>
+                <div className="flex items-center justify-between">
+                  {/* Item Information */}
+                  <div className="flex items-center space-x-4">
+                    {/* Item Image */}
+                    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center justify-center">
+                      {item.image_url ? (
+                        <img 
+                          src={item.image_url} 
+                          alt={item.name}
+                          className="w-full h-full object-cover rounded-md"
+                        />
+                      ) : (
+                        <Package className="h-8 w-8 text-gray-400" />
+                      )}
+                    </div>
+
+                    {/* Item Details */}
+                    <div>
+                      <h3 className="font-semibold text-gray-800 dark:text-gray-100">
+                        {item.name}
+                      </h3>
+                      <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-300">
+                        <span className="flex items-center">
+                          {ended ? (
+                            <span className="flex items-center">
+                              Final Price: £{Number(item.current_bid).toFixed(2)}
+                            </span>
+                          ) : (
+                            <span className="flex items-center">
+                              Current Bid: £{Number(item.current_bid).toFixed(2)}
+                            </span>
+                          )}
+                        </span>
+                        {!ended && (
+                          <span className="flex items-center">
+                            <Clock className="h-4 w-4 mr-1" />
+                            Ends: {new Date(item.end_time).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Action Buttons */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => removeFromWatchlist(item.id)}
-                    className="btn btn-ghost btn-sm"
-                    title="Remove from watchlist"
-                  >
-                    <Heart className="h-4 w-4 fill-current text-red-500" />
-                  </button>
-                  <Link 
-                    to={`/auction/${item.item_id}`}
-                    className="btn btn-ghost btn-sm"
-                    title="View auction"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </Link>
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => removeFromWatchlist(item.id)}
+                      className="btn btn-ghost btn-sm"
+                      title="Remove from watchlist"
+                    >
+                      <Heart className="h-4 w-4 fill-current text-red-500" />
+                    </button>
+                    <Link 
+                      to={`/auction/${item.item_id}`}
+                      className="btn btn-ghost btn-sm"
+                      title="View auction"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

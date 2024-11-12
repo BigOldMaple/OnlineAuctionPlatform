@@ -33,9 +33,10 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { 
   ArrowLeft, 
   Star, 
-  Clock, 
   Heart,
-  Loader2 
+  Clock, 
+  Loader2,
+  StopCircle
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -68,6 +69,66 @@ function AuctionDetailsPage() {
       }
     } catch (error) {
       console.error('Error checking watchlist status:', error);
+    }
+  };
+
+  // End auction handler
+  const handleEndAuction = async () => {
+    if (!auction) return;
+
+    try {
+      // Show loading toast
+      const loadingToast = toast.loading('Ending auction...');
+      
+      const currentTime = new Date().toISOString();
+      
+      console.log('Updating auction end time:', {
+        auctionId: auction.id,
+        newEndTime: currentTime
+      });
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/auctions/${auction.id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            end_time: currentTime,
+            updated_at: currentTime
+          })
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to end auction');
+      }
+
+      // Get the updated auction data
+      const updatedAuctionResponse = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api/auctions/item/${id}`
+      );
+
+      if (!updatedAuctionResponse.ok) {
+        throw new Error('Failed to fetch updated auction data');
+      }
+
+      const updatedAuctionData = await updatedAuctionResponse.json();
+      setAuction(updatedAuctionData.data);
+
+      // Update toast to success
+      toast.update(loadingToast, { 
+        render: 'Auction ended successfully', 
+        type: 'success',
+        isLoading: false,
+        autoClose: 3000
+      });
+
+    } catch (error) {
+      console.error('Error ending auction:', error);
+      toast.error(`Failed to end auction: ${error.message}`);
     }
   };
 
@@ -245,8 +306,24 @@ function AuctionDetailsPage() {
   const timeLeft = endTime - new Date();
   const daysLeft = Math.ceil(timeLeft / (1000 * 60 * 60 * 24));
 
+  const isAuctionEnded = timeLeft <= 0;
+
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6">
+      {/* Test End Auction Button - Moved to top right */}
+      {!isAuctionEnded && auction && (
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={handleEndAuction}
+            className="btn btn-ghost btn-xs text-gray-500 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-900/30 gap-1"
+            title="End auction (for testing)"
+          >
+            <StopCircle className="h-3 w-3" />
+            <span className="text-xs">Test: End Auction</span>
+          </button>
+        </div>
+      )}
+
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
@@ -257,27 +334,51 @@ function AuctionDetailsPage() {
       </button>
 
       <div className="bg-base-200 rounded-lg p-6 shadow-lg">
-        {/* Title with Watchlist Button */}
+        {/* Title with Watchlist */}
         <div className="flex justify-between items-start mb-6">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-gray-100">
             {item.title}
           </h2>
+          {/* Watchlist Button Only */}
           {isAuthenticated && (
-          <button
-            onClick={toggleWatchlist}
-            disabled={watchlistLoading || !isAuthenticated}
-            className={`btn btn-circle btn-ghost ${
-              isWatched ? 'text-red-500' : 'text-gray-400'
-            }`}
-            title={isAuthenticated ? (isWatched ? 'Remove from watchlist' : 'Add to watchlist') : 'Log in to add to watchlist'}
+            <button
+              onClick={toggleWatchlist}
+              disabled={watchlistLoading || !isAuthenticated}
+              className={`btn btn-circle btn-ghost ${
+                isWatched ? 'text-red-500' : 'text-gray-400'
+              }`}
+              title={isAuthenticated ? (isWatched ? 'Remove from watchlist' : 'Add to watchlist') : 'Log in to add to watchlist'}
+            >
+              {watchlistLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : (
+                <Heart className={`h-6 w-6 ${isWatched ? 'fill-current' : ''}`} />
+              )}
+            </button>
+          )}
+        </div>
+
+        {/* Auction Status Badge */}
+        <div className="mb-4">
+          <div
+            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium
+              ${isAuctionEnded 
+                ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' 
+                : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+              }`}
           >
-            {watchlistLoading ? (
-              <Loader2 className="h-6 w-6 animate-spin" />
+            {isAuctionEnded ? (
+              <>
+                <StopCircle className="h-4 w-4" />
+                Auction Ended
+              </>
             ) : (
-              <Heart className={`h-6 w-6 ${isWatched ? 'fill-current' : ''}`} />
+              <>
+                <Clock className="h-4 w-4" />
+                {`${daysLeft} days remaining`}
+              </>
             )}
-          </button>
-        )}
+          </div>
         </div>
 
         {/* Image */}
@@ -292,10 +393,16 @@ function AuctionDetailsPage() {
         {/* Details Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           <div className="space-y-3">
-            {/* Current Bid */}
+            {/* Current/Final Price */}
             <div className="flex items-center justify-between sm:justify-start sm:gap-4">
-              <span className="text-gray-600 dark:text-gray-400 font-medium">Current Bid:</span>
-              <span className="text-success text-lg font-bold">
+              <span className="text-gray-600 dark:text-gray-400 font-medium">
+                {isAuctionEnded ? 'Final Price:' : 'Current Bid:'}
+              </span>
+              <span className={`text-lg font-bold ${
+                isAuctionEnded 
+                  ? 'text-gray-800 dark:text-gray-200' 
+                  : 'text-success'
+              }`}>
                 £{currentPrice.toFixed(2)}
               </span>
             </div>
@@ -306,17 +413,6 @@ function AuctionDetailsPage() {
               <span className="text-gray-800 dark:text-gray-200 font-medium">
                 £{startingPrice.toFixed(2)}
               </span>
-            </div>
-
-            {/* Time Left */}
-            <div className="flex items-center justify-between sm:justify-start sm:gap-4">
-              <span className="text-gray-600 dark:text-gray-400 font-medium">Time Left:</span>
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
-                <span className="text-primary font-medium">
-                  {daysLeft} days
-                </span>
-              </div>
             </div>
 
             {/* Category */}
@@ -381,8 +477,9 @@ function AuctionDetailsPage() {
           <button
             onClick={openBidModal}
             className="btn btn-primary btn-lg flex-1"
+            disabled={isAuctionEnded}
           >
-            Place Bid
+            {isAuctionEnded ? 'Auction Ended' : 'Place Bid'}
           </button>
         </div>
       </div>

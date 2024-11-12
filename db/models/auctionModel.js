@@ -141,13 +141,19 @@ const updateAuctionById = async (id, auctionData) => {
   const trx = await db.transaction();
   
   try {
+    console.log('Updating auction in database:', {
+      auctionId: id,
+      updateData: auctionData
+    });
+
     // Check if auction exists
     const existingAuction = await trx("auctions")
       .where({ id })
       .first();
 
     if (!existingAuction) {
-      throw new Error(`Auction with ID ${id} not found`);
+      await trx.rollback();
+      return null;
     }
 
     // Update the auction
