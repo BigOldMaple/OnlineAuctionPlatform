@@ -11,24 +11,24 @@ describe("Bid functionality", () => {
       .and("have.class", "bg-gray-800")
       .and("have.class", "relative");
     const minimumBid = 10.01;
-
+    cy.wait(500);
     cy.get('input[placeholder="0.00"]').type("9.50");
-
+    cy.wait(500);
     cy.get("button").contains("Review Bid").click();
-
+    cy.wait(500);
     cy.get(".text-red-300").should("be.visible");
   });
   it("should show an error when not logged in and placing bid", () => {
     cy.get("button").contains("Place Bid").click();
-
+    cy.wait(800);
     const validBid = 200;
-
+    cy.wait(800);
     cy.get('input[placeholder="0.00"]').clear().type(validBid.toFixed(2));
-
+    cy.wait(800);
     cy.get("button").contains("Review Bid").click();
-
+    cy.wait(800);
     cy.get(".text-red-300").should("exist");
-
+    cy.wait(800);
     cy.get("button").contains("Review Bid").should("not.be.disabled").click();
   });
   it("Should log in on login button click", () => {
@@ -46,16 +46,16 @@ describe("Bid functionality", () => {
 
     cy.get("button").contains("Auction List").click();
     cy.get("button").contains("Electronics").click();
-    cy.wait(1350);
+    cy.wait(800);
     cy.get("button").contains("Back").click();
     cy.get("button").contains("Jewelery").click();
-    cy.wait(1350);
+    cy.wait(800);
     cy.get("button").contains("Back").click();
     cy.get("button").contains("Men's Clothing").click();
-    cy.wait(1350);
+    cy.wait(800);
     cy.get("button").contains("Back").click();
     cy.get("button").contains("Women's Clothing").click();
-    cy.wait(1350);
+    cy.wait(800);
     cy.get("button").contains("Back").click();
     cy.get("button").contains("AuctionSite").click();
     cy.log("Test completed successfully");
