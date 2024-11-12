@@ -37,9 +37,30 @@ describe("Bid functionality", () => {
     cy.origin("https://dev-867cdotto34qdajf.us.auth0.com", () => {
       cy.get(".input.c4ea79246.c882875d6").type("123@321.com");
       cy.get(".input.c4ea79246.c2946f7ad").type("PassWord!1");
-      cy.get("button").contains("Continue").click();
+      cy.get(
+        'button[data-action-button-primary="true"][name="action"][value="default"]'
+      ).click();
     });
-    cy.visit("http://localhost:5173");
+    cy.wait(4000);
+    cy.visit("http://localhost:5173/auction/6");
+
+    cy.get("button").contains("Place Bid").click();
+    cy.wait(800);
+    const invalidBid = 1;
+
+    const validBid = 205;
+    cy.get('input[placeholder="0.00"]').clear().type(invalidBid.toFixed(2));
+    cy.get("button").contains("Review Bid").click();
+    cy.wait(800);
+    cy.get(".text-red-300").should("exist");
+
+    cy.get('input[placeholder="0.00"]').clear().type(validBid.toFixed(2));
+
+    cy.get("button").contains("Review Bid").click();
+    cy.get("button").contains("Confirm Bid").click();
+    cy.get(".toastify").contains("Bid of £205.00 placed successfully!");
+
+    cy.wait(800);
   });
   it("Should be able to click quick links", () => {
     cy.viewport(1920, 1080);
