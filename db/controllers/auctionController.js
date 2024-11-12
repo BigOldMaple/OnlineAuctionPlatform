@@ -120,7 +120,26 @@ const createAuction = async (req, res) => {
 const updateAuction = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedAuction = await updateAuctionById(id, req.body);
+    const updateData = req.body;
+
+    console.log('Updating auction:', {
+      auctionId: id,
+      updateData: updateData
+    });
+
+    // If end_time is being updated, ensure it's a valid date
+    if (updateData.end_time) {
+      const endTime = new Date(updateData.end_time);
+      if (isNaN(endTime.getTime())) {
+        return res.status(400).json({
+          error: 'Invalid end time format',
+          message: 'Please provide a valid date-time format'
+        });
+      }
+      updateData.end_time = endTime;
+    }
+
+    const updatedAuction = await updateAuctionById(id, updateData);
     
     if (!updatedAuction) {
       return res.status(404).json({
@@ -142,6 +161,7 @@ const updateAuction = async (req, res) => {
     });
   }
 };
+
 
 // Delete an auction by ID
 const removeAuction = async (req, res) => {

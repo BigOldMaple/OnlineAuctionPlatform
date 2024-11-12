@@ -7,7 +7,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
-import { Star, Loader2 } from "lucide-react";
+import { Star, Loader2, Clock, StopCircle } from "lucide-react";
 
 function AuctionCard({ item }) {
   const { isDarkMode } = useTheme();
@@ -83,6 +83,25 @@ function AuctionCard({ item }) {
   const currentPrice = auction ? Number(auction.current_bid) || Number(item.price) : Number(item.price);
   const startingPrice = Number(item.price);
 
+  // Calculate if auction has ended
+  const isAuctionEnded = auction ? new Date(auction.end_time) <= new Date() : false;
+
+  // Calculate time remaining
+  const getTimeRemaining = () => {
+    if (!auction) return null;
+    
+    const endTime = new Date(auction.end_time);
+    const now = new Date();
+    const timeLeft = endTime - now;
+    
+    if (timeLeft <= 0) return 'Ended';
+    
+    const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    
+    return days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+  };
+
   return (
     <Link
       to={`/auction/${item.id}`}
@@ -91,8 +110,33 @@ function AuctionCard({ item }) {
         hover:scale-105
         bg-white dark:bg-gray-800
         border border-gray-200 dark:border-gray-700
-        hover:shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700"
+        hover:shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700
+        relative"
     >
+      {/* Auction Status Badge */}
+      {!loading && auction && (
+        <div
+          className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium
+            flex items-center gap-1
+            ${isAuctionEnded 
+              ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' 
+              : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+            }`}
+        >
+          {isAuctionEnded ? (
+            <>
+              <StopCircle className="h-3 w-3" />
+              Ended
+            </>
+          ) : (
+            <>
+              <Clock className="h-3 w-3" />
+              {getTimeRemaining()}
+            </>
+          )}
+        </div>
+      )}
+
       {/* Image Container */}
       <div className="h-48 flex justify-center items-center mb-4 overflow-hidden rounded-md bg-gray-100 dark:bg-gray-900">
         <img
@@ -123,11 +167,17 @@ function AuctionCard({ item }) {
       <div className="mt-auto space-y-2">
         {/* Current Bid */}
         <div className="flex justify-between items-center">
-          <span className="text-gray-600 dark:text-gray-400">Current Bid:</span>
+          <span className="text-gray-600 dark:text-gray-400">
+            {isAuctionEnded ? 'Final Price:' : 'Current Bid:'}
+          </span>
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin text-emerald-600 dark:text-emerald-400" />
           ) : (
-            <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+            <span className={`font-bold ${
+              isAuctionEnded 
+                ? 'text-gray-800 dark:text-gray-200' 
+                : 'text-emerald-600 dark:text-emerald-400'
+            }`}>
               £{formatPrice(currentPrice)}
             </span>
           )}
