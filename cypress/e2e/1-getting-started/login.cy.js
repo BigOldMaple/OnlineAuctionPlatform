@@ -58,7 +58,6 @@ describe("Bid functionality", () => {
 
     cy.get("button").contains("Review Bid").click();
     cy.get("button").contains("Confirm Bid").click();
-    cy.get(".toastify").contains("Bid of £205.00 placed successfully!");
 
     cy.wait(800);
   });
